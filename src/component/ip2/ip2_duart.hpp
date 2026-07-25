@@ -40,6 +40,17 @@ namespace Iris
 
     // Read registers
     #define DUART_READ_STATUS_A                     0x1             // 0x1: [Read] Status Register A
+
+    // Status register bits
+    #define DUART_STATUS_RECEIVED_BREAK             (1 << 7)        // break received
+    #define DUART_STATUS_FRAMING_ERROR              (1 << 6)        // data framing failed
+    #define DUART_STATUS_PARITY_ERROR               (1 << 5)        // parity error
+    #define DUART_STATUS_OVERRUN_ERROR              (1 << 4)        // overrun fifo
+    #define DUART_STATUS_TRANSMITTER_EMPTY          (1 << 3)        // transmitter empty
+    #define DUART_STATUS_TRANSMITTER_READY          (1 << 2)        // ready to transmit
+    #define DUART_STATUS_FIFO_FULL                  (1 << 1)        // FIFO is full
+    #define DUART_STATUS_RECEIVER_READY             (1 << 0)        // receiver is ready
+
     #define DUART_READ_BRG_TEST                     0x2             // 0x2: [Read] BRG Test
     #define DUART_READ_RX_HOLD_A                    0x3             // 0x3: [Read] Rx Holding Register A
     #define DUART_READ_INPUT_PORT_CHANGE            0x4             // 0x4: [Read] Input Port Change
@@ -114,6 +125,7 @@ namespace Iris
             uint8_t clocksel;
             uint8_t mode1, mode2;
             uint8_t modeRegCurrent; 
+            uint8_t status; 
 
             // transmit/receive
             uint8_t txEnabled, rxEnabled;
@@ -124,6 +136,7 @@ namespace Iris
             uint8_t txBitsTransmitted;
             uint8_t txPrescale, rxPrescale;
             uint8_t rxFifo[DUART_FIFO_SIZE + 1];
+            uint8_t rxFifoReadPtr, rxFifoWritePtr;
         };
 
         struct DUART
@@ -134,13 +147,18 @@ namespace Iris
             uint16_t counter;           // counter/timer
             uint16_t counterPreset;     // counter/timer preset value
 
+            uint8_t brgTest;
+
             // Input ports
             uint8_t inputPorts[DUART_NUM_INPUT_PORTS] = {0};
             UARTChannel channels[DUART_NUM_CHANNELS] = {0};
 
         };
 
-        DUART uarts[2] = {0};
+        DUART duarts[2] = {0};
 
+    private: 
+        void UpdateDataFrameState(int32_t duart, int32_t channel);
+        void UpdateInterruptState(int32_t duart, int32_t channel);
     };
 }

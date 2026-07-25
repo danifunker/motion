@@ -99,11 +99,6 @@ namespace Iris
 
         bool logEnabled = false; 
 
-        MMU_IP2()
-        {
-
-        }
-
     private: 
         CoherentExtensionIP2MMU* mmuExtension; 
 

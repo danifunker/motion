@@ -60,4 +60,6 @@
 
 #define WRITE_32TO16(x, old, addr)  x &= (~0xFFFF << (addr & 3) << 3); \
                                     x |= (old << ((addr & 3) << 3))     
-                               
+                                    
+// Lets the programmer know if we are deliberately allowing a falltrhough            
+#define fallthrough

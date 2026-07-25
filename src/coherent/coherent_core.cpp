@@ -95,6 +95,8 @@ namespace Iris
         breakpoints.clear();
         catchpoints.clear();
         watchpoints.clear();
+
+        extensions.clear();
         active = false; 
     }
 

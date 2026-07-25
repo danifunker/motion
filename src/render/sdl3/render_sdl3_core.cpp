@@ -8,6 +8,7 @@
 */
 
 #include <base/emulation.hpp>
+#include <coherent/coherent.hpp>
 #include <render/sdl3/render_sdl3.hpp>
 
 namespace Iris
@@ -102,6 +103,18 @@ namespace Iris
             // quit if we need to
             if (event.type == SDL_EVENT_QUIT)
                 Emulation::SetRunning(false);
+            else if (event.type == SDL_EVENT_KEY_DOWN)
+            {
+                // TEMP : some basic keyboard controls.
+                // need to figure out how our event system is going to work so we can have backend independent events
+                // maybe components can subscribe to events
+                switch (event.key.key)
+                {
+                    case SDLK_F9:
+                        Coherent::active = !Coherent::active;
+                        break;
+                }
+            }
         }
     
         ImGui_ImplSDLGPU3_NewFrame();

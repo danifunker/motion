@@ -40,13 +40,12 @@ namespace Iris
         styleObj.Colors[ImGuiCol_TitleBg] = ImVec4(0.8, 0.8, 0.8, 1.0);
         styleObj.Colors[ImGuiCol_TitleBgActive] = ImVec4(1.0, 1.0, 1.0, 1.0);
         styleObj.Colors[ImGuiCol_MenuBarBg] = ImVec4(0.9, 0.9, 0.9, 1.0);
-        // from a crappy screenshot of mex since it doesn't run yet in the emulator
-        // note ; really copies the title bar style rather than the style of MEX itself.
-        styleObj.Colors[ImGuiCol_Text] = ImVec4(0.194, 0.273, 0.802, 1.0);
+        // from an mex screenshot. need to make the text black in the window but blue in the title bar...
+        styleObj.Colors[ImGuiCol_Text] = ImVec4(0.0, 0.0, 1.0, 1.0);
         styleObj.Colors[ImGuiCol_Header] = ImVec4(0.094, 0.173, 0.902, 1.0);
-        styleObj.Colors[ImGuiCol_WindowBg] = ImVec4(0.0, 0.0, 0.0, 1.0);
-        styleObj.Colors[ImGuiCol_Border] = ImVec4(1.0, 1.0, 1.0, 1.0);
-        styleObj.WindowBorderSize = 2;
+        styleObj.Colors[ImGuiCol_WindowBg] = ImVec4(1.0, 1.0, 1.0, 1.0);
+        styleObj.Colors[ImGuiCol_Border] = ImVec4(0.0, 0.0, 0.0, 1.0);
+        styleObj.WindowBorderSize = 1;
         styleObj.WindowRounding = 0;
     }
 
