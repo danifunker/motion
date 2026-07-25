@@ -5,17 +5,10 @@ add_library(moira STATIC
 Moira.cpp
 )
 
-if (NOT MSVC)
-    target_compile_options(moira PUBLIC -Wno-unused-parameter)
-    target_compile_options(moira PUBLIC -Wno-unused-but-set-parameter)
-    target_compile_options(moira PUBLIC -Wno-unused-but-set-variable)
-    target_compile_options(moira PUBLIC -Wno-missing-field-initializers)
-endif()
-
-if(MSVC)
-    target_compile_options(moira PUBLIC /W4 /bigobj) # /WX disabled for now
-    target_compile_options(moira PUBLIC /wd4100 /wd4201 /wd4324 /wd4458 /wd4127)
-endif()
+target_compile_options(moira PUBLIC -Wno-unused-parameter)
+target_compile_options(moira PUBLIC -Wno-unused-but-set-parameter)
+target_compile_options(moira PUBLIC -Wno-unused-but-set-variable)
+target_compile_options(moira PUBLIC -Wno-missing-field-initializers)
 
 if(MINGW)
     target_compile_options(moira PUBLIC -Wa,-mbig-obj)
