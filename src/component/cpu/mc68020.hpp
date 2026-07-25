@@ -10,6 +10,7 @@ namespace Iris
 {
     #define MOIRA_DISASM_BUF_SIZE    512
 
+    /// @brief Debugger extensions for Lisburn
     class MC68020DebuggerSystem : public CoherentSystem
     {
 
@@ -47,7 +48,8 @@ namespace Iris
         // METHODS
         // 
 
-        uint32_t GetClockSpeed() override { return 16777000; }; 
+        // rc16 uses this clock speed. sdhould be switchable eventually
+        uint32_t GetClockSpeed() override { return 16666670; }; 
 
         void Start() override;
         void Tick() override;

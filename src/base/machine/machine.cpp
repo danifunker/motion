@@ -15,7 +15,7 @@ namespace Iris
         {
             // 0 clockspeed = run AFAP
             // THis may not be a good idea. We may have to add fake cycles.
-            if (component->clockSpeed > 0)
+            if (component->GetClockSpeed() > 0)
             {
                 // maybe microseconds would be better ???
                 auto ns = Chrono_GetTicksNS(Chrono_GetTime());
@@ -23,7 +23,7 @@ namespace Iris
 
                 if (component->delayNs != 0)
                 {
-                    auto nsPerTick = (1.0 / (double)component->clockSpeed) * 1000000000; // use maximum precision available
+                    auto nsPerTick = (1.0 / (double)component->GetClockSpeed()) * 1000000000; // use maximum precision available
 
                     if (component->lastTickNs != 0
                     || (ns - component->lastTickNs) > nsPerTick)

@@ -38,8 +38,23 @@ namespace Iris
     #define DUART_MODE_B                            0x8             // 0x8: [Read/Write] Mode Register B
     #define DUART_INTERRUPT_VECTOR                  0xC             // 0xC: [Read] Interrupt Vector
 
+    // Mode register bits
+
+    #define DUART_MODE_RX_INT_SELECT_BIT            (1 << 6)
+    #define DUART_MODE_BLOCK_ERROR                  (1 << 5) 
+
     // Read registers
     #define DUART_READ_STATUS_A                     0x1             // 0x1: [Read] Status Register A
+
+    // Interrupts
+    #define DUART_INT_INPUT_PORT_CHANGE             (1 << 7)        // input port changed
+    #define DUART_INT_DELTA_BREAK_B                 (1 << 6)        // delta break on channel b
+    #define DUART_INT_RXRDY_FFULLB                  (1 << 5)        // rx fifo full on channel b
+    #define DUART_INT_TXRDYB                        (1 << 4)        // tx ready on channel b
+    #define DUART_INT_COUNTER_READY                 (1 << 3)        // counter ready
+    #define DUART_INT_DELTA_BREAK_A                 (1 << 2)        // delta break on channel a
+    #define DUART_INT_RXRDY_FFULLA                  (1 << 1)        // rx fifo full on channel a
+    #define DUART_INT_TXRDYA                        (1 << 0)        // tx ready on channel a
 
     // Status register bits
     #define DUART_STATUS_RECEIVED_BREAK             (1 << 7)        // break received
@@ -110,6 +125,8 @@ namespace Iris
         // todo: we need to do something
         int GetDuartIONum(size_t addr) { return (addr & 0x800000) ? 1 : 0; }
 
+        void Tick() override;
+        
         uint8_t OnRead8(size_t addr) override;
         uint16_t OnRead16(size_t addr) override;
         uint32_t OnRead32(size_t addr) override;
@@ -125,7 +142,7 @@ namespace Iris
             uint8_t clocksel;
             uint8_t mode1, mode2;
             uint8_t modeRegCurrent; 
-            uint8_t status; 
+            uint16_t status; 
 
             // transmit/receive
             uint8_t txEnabled, rxEnabled;
@@ -136,7 +153,8 @@ namespace Iris
             uint8_t txBitsTransmitted;
             uint8_t txPrescale, rxPrescale;
             uint8_t rxFifo[DUART_FIFO_SIZE + 1];
-            uint8_t rxFifoReadPtr, rxFifoWritePtr;
+            uint8_t rxFifoReadPtr, rxFifoWritePtr;              // read/write rx fifo ptrs
+            uint8_t rxFifoFree;                                 // free rx fifo slots 
         };
 
         struct DUART
@@ -146,8 +164,9 @@ namespace Iris
             uint8_t imr;                // interrupt mask
             uint16_t counter;           // counter/timer
             uint16_t counterPreset;     // counter/timer preset value
+            uint8_t auxControl;         // auxillary control (misc.)
 
-            uint8_t brgTest;
+            uint8_t brgTest;            // allows extended / nonstandard baud rates ? maybe only on later models
 
             // Input ports
             uint8_t inputPorts[DUART_NUM_INPUT_PORTS] = {0};
@@ -157,8 +176,36 @@ namespace Iris
 
         DUART duarts[2] = {0};
 
+        // clocks
+
+        int32_t ip2clk;             // General purpose input, or Channel B receiver external clock input (RxCB), 
+        int32_t ip3clk;             // General purpose input, or Channel A transmitter external clock input (TxCA).
+        int32_t ip4clk;             // General purpose input, or Channel A receiver external clock input (RxCA). .
+        int32_t ip5clk;             // General purpose input, or Channel B transmitter external clock input (TxCB). .
+
+        /// @brief Returns the clock speed of the component in hertz. This is deliberately set to zero so it will be called AFAP.
+        /// The reason for this is that there are two clocks.
+        /// @return Returns the clock speed of the component in hertz
+        uint32_t GetClockSpeed() override { return 0; }; 
     private: 
+        /// @brief set the baud rate.
+        /// @param channel The channel to use the clock source for.
+        /// @param isRx TRUE - set transmit baud rate; FALSE - set receive baud rate.
+        /// @param data Source data.
+        void SetBaudRate(int32_t duart, int32_t channelId, bool isRx, uint8_t data); 
         void UpdateDataFrameState(int32_t duart, int32_t channel);
         void UpdateInterruptState(int32_t duart, int32_t channel);
+
+        void RxClock();
+        void TxClock();
+
+        // Baud rate constants
+
+        inline static const int baudRateACR0[] = { 50, 110, 134, 200, 300, 600, 1200, 1050, 2400, 4800, 7200, 9600, 38400, 0, 0, 0 };
+        inline static const int baudRateACR1[] = { 75, 110, 134, 150, 300, 600, 1200, 2000, 2400, 4800, 1800, 9600, 19200, 0, 0, 0 };
+
+        // RX/TX CLock 
+        uint64_t rxClkNs;
+        uint64_t txClkNs;
     };
 }
