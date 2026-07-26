@@ -24,7 +24,7 @@ namespace Iris
     {
         friend class CoherentExtensionIP2Switches;
 
-        #define SWITCH_ADDR             31800000
+        #define SWITCH_ADDR             0x31800000
 
         public:
             void Start() override
