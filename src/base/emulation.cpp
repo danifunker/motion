@@ -7,6 +7,7 @@
 #include <component/ip2/ip2_mmu.hpp>
 #include <component/ip2/ip2_rtc.hpp>
 #include <component/ip2/ip2_duart.hpp>
+#include <component/ip2/ip2_dip_switches.hpp>
 
 namespace Iris
 {
@@ -31,6 +32,7 @@ namespace Iris
         machine.AddComponent<PROM_SRAM>();
         machine.AddComponent<MMU_IP2>();
         machine.AddComponent<DUART68681>();
+        machine.AddComponent<IP2Switches>();
         machine.Start();
 
         // enter the coherent debugger

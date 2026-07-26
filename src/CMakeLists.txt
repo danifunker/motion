@@ -45,5 +45,6 @@ add_executable(motion
     base/cmdline/cmdline.cpp
     component/ip2/ip2_duart_debug.cpp
     component/serial/serial.hpp
+    component/ip2/ip2_dip_switches.cpp
 )
 

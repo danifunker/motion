@@ -66,7 +66,7 @@ namespace Iris
             case DUART_READ_RX_HOLD_B:
                 if (!channel.rxFifoFree)
                 {
-                    Logger::Log(DUART_LOG_PREFIX, std::format("DUART{} RX FIFO {} underflow...", duartId, channel).c_str());
+                    Logger::Log(DUART_LOG_PREFIX, std::format("DUART{} RX FIFO {} underflow...", duartId, channelId).c_str());
                     mustUpdateInterrupts = true;
                     break; 
                 }
@@ -189,6 +189,8 @@ namespace Iris
                         channel.status &= ~(DUART_STATUS_OVERRUN_ERROR);
 
                         channel.rxFifoReadPtr = channel.rxFifoWritePtr = channel.rxFifoFree = 0;
+                        
+                        
                         break;
 
 

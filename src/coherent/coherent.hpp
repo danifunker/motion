@@ -69,7 +69,7 @@ namespace Iris
 
         /// @brief Add the UI for a custom Coherent menu. Note: Control of the menu bar is up to you. Your method is called right before the EndMenu on the main
         /// coherent window. Coherent takes care of calling BeginMenu (with a boolean indicating if the menu was clicked) and EndMenu for you.
-        virtual void AddCustomMenu(bool menuWasClicked) { };
+        virtual void AddMenu() { };
 
         // Getters for private methods
 

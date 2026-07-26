@@ -75,13 +75,6 @@ namespace Iris
 
                 // Help / about window 
 
-                if (ImGui::BeginMenu("Help"))
-                {
-                    if (ImGui::MenuItem("About"))
-                        CoherentUI::aboutActive = true;
-
-                    ImGui::EndMenu();
-                }
 
                 if (ImGui::BeginMenu("Style"))
                 {
@@ -110,10 +103,22 @@ namespace Iris
                             clicked = ImGui::BeginMenu(extension->menuName);
 
                         // tell the extension that we clicked it in case they don't want to add any child menu options
-                        extension->AddCustomMenu(clicked);
+
+                        if (clicked)
+                            extension->AddMenu();
                         
                         ImGui::EndMenu();
                     }
+                }
+
+                // Help menu
+
+                if (ImGui::BeginMenu("Help"))
+                {
+                    if (ImGui::MenuItem("About"))
+                        CoherentUI::aboutActive = true;
+
+                    ImGui::EndMenu();
                 }
 
                 ImGui::EndMenuBar();
