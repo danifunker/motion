@@ -105,9 +105,11 @@ namespace Iris
                         // tell the extension that we clicked it in case they don't want to add any child menu options
 
                         if (clicked)
+                        {
                             extension->AddMenu();
-                        
-                        ImGui::EndMenu();
+                            ImGui::EndMenu();
+                        }
+
                     }
                 }
 
