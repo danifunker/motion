@@ -44,7 +44,6 @@ namespace Iris
     #define DUART_MODE_BLOCK_ERROR                  (1 << 5) 
 
     // Read registers
-    #define DUART_READ_STATUS_A                     0x1             // 0x1: [Read] Status Register A
 
     // Interrupts
     #define DUART_INT_INPUT_PORT_CHANGE             (1 << 7)        // input port changed
@@ -64,8 +63,20 @@ namespace Iris
     #define DUART_STATUS_TRANSMITTER_EMPTY          (1 << 3)        // transmitter empty
     #define DUART_STATUS_TRANSMITTER_READY          (1 << 2)        // ready to transmit
     #define DUART_STATUS_FIFO_FULL                  (1 << 1)        // FIFO is full
-    #define DUART_STATUS_RECEIVER_READY             (1 << 0)        // receiver is ready
+    #define DUART_STATUS_RECEIVER_READY             (1 << 0)        // receiver is ready.
 
+    // Command IDs for 0x2 write
+    #define DUART_COMMAND_NOP                       0x0             // do nothing
+    #define DUART_COMMAND_RESET_MR_PTR              0x1             // reset modereg pointer (autoincrements but not autoresets lmao)
+    #define DUART_COMMAND_RESET_CHAN_RECEIVER       0x2             // reset channel receiver
+    #define DUART_COMMAND_RESET_CHAN_TRANSMITTER    0x3             // reset channel transmitter
+    #define DUART_COMMAND_RESET_ERROR_STATUS        0x4             // reset error status
+    #define DUART_COMMAND_RESET_CHANNEL_BRK_CHANGE  0x5             // reset channel brk change
+    #define DUART_COMMAND_START_TX_BREAK            0x6             // start tx break
+    #define DUART_COMMAND_STOP_TX_BREAK             0x7             // stop tx break
+
+    // On-read registers
+    #define DUART_READ_STATUS_A                     0x1             // 0x1: [Read] Status Register A
     #define DUART_READ_BRG_TEST                     0x2             // 0x2: [Read] BRG Test
     #define DUART_READ_RX_HOLD_A                    0x3             // 0x3: [Read] Rx Holding Register A
     #define DUART_READ_INPUT_PORT_CHANGE            0x4             // 0x4: [Read] Input Port Change
@@ -225,7 +236,9 @@ namespace Iris
 
         // RX/TX CLock 
         uint64_t rxClkNs;
+        uint64_t lastRxClkNs = 0;
         uint64_t txClkNs;
+        uint64_t lastTxClkNs = 0;
 
         CoherentExtensionDUART68681* duartExtension;
     };

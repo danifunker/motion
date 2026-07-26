@@ -44,5 +44,6 @@ add_executable(motion
     coherent/coherent_gui_style.cpp
     base/cmdline/cmdline.cpp
     component/ip2/ip2_duart_debug.cpp
+    component/serial/serial.hpp
 )
 

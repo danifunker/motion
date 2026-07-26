@@ -23,10 +23,12 @@ namespace Iris
         DUART duart = duarts[duartId];
         
         // bit 4 is used for channel selection on channel regs
-        int32_t channel = 0;
+        int32_t channelId = 0;
 
         if (addr & 0x08)
-            channel = 1;
+            channelId = 1;
+
+        UARTChannel& channel = duarts[duartId].channels[channelId];
 
         uint8_t ret = 0;
         uint8_t mrPtr = 0;
@@ -38,22 +40,22 @@ namespace Iris
         {
             case DUART_MODE_A:
             case DUART_MODE_B:
-                mrPtr = duart.channels[channel].modeRegCurrent;
+                mrPtr = channel.modeRegCurrent;
 
                 if (mrPtr == 0)
                 {
-                    ret = duart.channels[channel].mode1;
-                    duart.channels[channel].modeRegCurrent++;
+                    ret = channel.mode1;
+                    channel.modeRegCurrent++;
                 }
                 else
-                    ret = duart.channels[channel].mode2;
+                    ret = channel.mode2;
 
                 mustUpdateFrame = true;
                 mustUpdateInterrupts = true; 
                 break;
             case DUART_READ_STATUS_A:
             case DUART_READ_STATUS_B:
-                ret = duart.channels[channel].status;
+                ret = channel.status;
                 break;
                 // non standard bit rates
             case DUART_READ_BRG_TEST:
@@ -62,36 +64,36 @@ namespace Iris
             // FIFO read
             case DUART_READ_RX_HOLD_A:
             case DUART_READ_RX_HOLD_B:
-                if (!duart.channels[channel].rxFifoFree)
+                if (!channel.rxFifoFree)
                 {
                     Logger::Log(DUART_LOG_PREFIX, std::format("DUART{} RX FIFO {} underflow...", duartId, channel).c_str());
                     mustUpdateInterrupts = true;
                     break; 
                 }
 
-                duart.channels[channel].rxFifoReadPtr++;
+                channel.rxFifoReadPtr++;
 
-                if (duart.channels[channel].rxFifoReadPtr > DUART_FIFO_SIZE)
-                    duart.channels[channel].rxFifoReadPtr = 0;
+                if (channel.rxFifoReadPtr > DUART_FIFO_SIZE)
+                    channel.rxFifoReadPtr = 0;
 
                 // decrement free count
-                duart.channels[channel].rxFifoFree--;
-                ret = duart.channels[channel].rxFifoReadPtr;
+                channel.rxFifoFree--;
+                ret = channel.rxFifoReadPtr;
 
                 // Handle the fifo flags
 
-                if (duart.channels[channel].rxFifoFree != DUART_FIFO_SIZE)
-                    duart.channels[channel].status &= ~(DUART_STATUS_FIFO_FULL);
+                if (channel.rxFifoFree != DUART_FIFO_SIZE)
+                    channel.status &= ~(DUART_STATUS_FIFO_FULL);
 
                 // handle no error
-                if (!(duart.channels[channel].mode1 & DUART_MODE_BLOCK_ERROR))
-                    duart.channels[channel].status &= ~(DUART_STATUS_RECEIVED_BREAK | DUART_STATUS_FRAMING_ERROR | DUART_STATUS_PARITY_ERROR);
+                if (!(channel.mode1 & DUART_MODE_BLOCK_ERROR))
+                    channel.status &= ~(DUART_STATUS_RECEIVED_BREAK | DUART_STATUS_FRAMING_ERROR | DUART_STATUS_PARITY_ERROR);
 
                 // can't receive anything if we have not parsed anything
-                if (!duart.channels[channel].rxFifoFree)
-                    duart.channels[channel].status &= ~(DUART_STATUS_RECEIVER_READY);
+                if (!channel.rxFifoFree)
+                    channel.status &= ~(DUART_STATUS_RECEIVER_READY);
                 else 
-                    duart.channels[channel].status |= ((duart.channels[channel].rxFifo[duart.channels[channel].rxFifoReadPtr]) >> 8); // throw in the latest fifo read 
+                    channel.status |= ((channel.rxFifo[channel.rxFifoReadPtr]) >> 8); // throw in the latest fifo read 
                 
                 mustUpdateInterrupts = true; 
 
@@ -99,10 +101,10 @@ namespace Iris
         }
 
         if (mustUpdateFrame)
-            UpdateDataFrameState(duartId, channel);
+            UpdateDataFrameState(duartId, channelId);
 
         if (mustUpdateInterrupts)
-            UpdateInterruptState(duartId, channel);
+            UpdateInterruptState(duartId, channelId);
 
         Logger::Log(DUART_LOG_PREFIX, std::format("DUART{} read8 0x{:x} from addr 0x{:x}", duartId, ret, addr).c_str(), LogChannels::Debug);
 
@@ -129,11 +131,13 @@ namespace Iris
         DUART& duart = duarts[duartId];
 
         // bit 4 is used for channel selection on channel regs
-        int32_t channel = 0;
+        int32_t channelId = 0;
 
         if (addr & 0x08)
-            channel = 1;
-            
+            channelId = 1;
+
+        UARTChannel& channel = duarts[duartId].channels[channelId];
+ 
         uint8_t ret = 0;
         uint8_t mrPtr = 0;
 
@@ -145,37 +149,58 @@ namespace Iris
             // mode reg
             case DUART_MODE_A:
             case DUART_MODE_B:
-                mrPtr = duart.channels[channel].modeRegCurrent;
+                mrPtr = channel.modeRegCurrent;
 
                 if (mrPtr == 0)
                 {
-                    duart.channels[channel].mode1 = value;
-                    duart.channels[channel].modeRegCurrent++;
+                    channel.mode1 = value;
+                    channel.modeRegCurrent++;
                 }
                 else
-                    duart.channels[channel].mode2 = value;
+                    channel.mode2 = value;
 
                 mustUpdateFrame = true;
                 mustUpdateInterrupts = true; 
                 break;
             case DUART_WRITE_CLOCKSEL_A:
             case DUART_WRITE_CLOCKSEL_B:
-                duart.channels[channel].clocksel = value;
-                SetBaudRate(duartId, channel, false, (value & 0x0F));
-                SetBaudRate(duartId, channel, true, ((value >> 4) & 0x0F));
+                channel.clocksel = value;
+                SetBaudRate(duartId, channelId, false, (value & 0x0F));
+                SetBaudRate(duartId, channelId, true, ((value >> 4) & 0x0F));
 
-                SetRxClock(duart.channels[channel].baudRateRX);
-                SetTxClock(duart.channels[channel].baudRateTX);
+                SetRxClock(channel.baudRateRX);
+                SetTxClock(channel.baudRateTX);
 
                 break;
+            case DUART_WRITE_COMMAND_A:
+            case DUART_WRITE_COMMAND_B:
+                // Command register
+                switch ((value >> 4) & 0x0F)
+                {
+                    case DUART_COMMAND_NOP:
+                        break;
+                    case DUART_COMMAND_RESET_MR_PTR:
+                        channel.modeRegCurrent = 0;
+                        break;
+                    case DUART_COMMAND_RESET_CHAN_RECEIVER:
+                        channel.rxEnabled = false;
+                        channel.status &= ~(DUART_STATUS_RECEIVER_READY | DUART_STATUS_RECEIVED_BREAK | DUART_STATUS_FRAMING_ERROR | DUART_STATUS_PARITY_ERROR);
+                        // MAME guy was not sure of this and i ran out of screen space anyway
+                        channel.status &= ~(DUART_STATUS_OVERRUN_ERROR);
 
+                        channel.rxFifoReadPtr = channel.rxFifoWritePtr = channel.rxFifoFree = 0;
+                        break;
+
+
+                }
+                break;
         }
 
         if (mustUpdateFrame)
-            UpdateDataFrameState(duartId, channel);
+            UpdateDataFrameState(duartId, channelId);
 
         if (mustUpdateInterrupts)
-            UpdateInterruptState(duartId, channel);
+            UpdateInterruptState(duartId, channelId);
 
         Logger::Log(DUART_LOG_PREFIX, std::format("DUART{} write8 0x{:x} to addr 0x{:x}", duartId, value, addr).c_str(), LogChannels::Debug);
     }
@@ -253,12 +278,38 @@ namespace Iris
     //
     // TICK method + CLOCK
     //
-    //
 
     void DUART68681::Tick()
     {
         // there's two clocks so we run our own clocks
 
+        bool runTx = false, runRx = false;
+
+        if (!lastRxClkNs)
+            runRx = true;
+        
+        if (!lastTxClkNs)
+            runTx = true;
+
+        auto ns = Chrono_GetTicksNS(Chrono_GetTime());
+
+        if ((ns - lastRxClkNs) > rxClkNs)
+            runRx = true;
+
+        if ((ns - lastTxClkNs) > txClkNs)
+            runTx = true;
+
+        if (runRx)
+        {
+            lastRxClkNs = ns;
+            OnRxClock();
+        }
+
+        if (runTx)
+        {
+            lastTxClkNs = ns;
+            OnTxClock();
+        }
     }
 
     void DUART68681::OnRxClock()
@@ -273,12 +324,14 @@ namespace Iris
 
     void DUART68681::SetRxClock(uint32_t hz)
     {
-
+        double intermediate = 1.0 / hz * 1000000000;
+        rxClkNs = (uint64_t)intermediate;
     }
 
     void DUART68681::SetTxClock(uint32_t hz)
     {
-
+        double intermediate = 1.0 / hz * 1000000000;
+        txClkNs = (uint64_t)intermediate;
     }
 
 }
