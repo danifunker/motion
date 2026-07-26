@@ -97,11 +97,20 @@ namespace Iris
     #define DUART_LOG_PREFIX                        "Emulation - IP2 DUART"
     // FOR COMPONENTS, WE DON'T NEED TO BOUNDS CHECK BECAUSE WE ALREADY MAPPED THE RIGHT SIZE!
 
+    /// @brief The DUART's Coherent extension. Check ip2_duart_debug.cpp! 
+    class CoherentExtensionDUART68681 : public CoherentExtension
+    {
+    public:
+        CoherentExtensionDUART68681(Component* owner) : CoherentExtension(owner) {}
+
+        void AddUI() override;
+    };
+
     class DUART68681 : public Component
     {
 
     public: 
-        void Start()
+        void Start() override
         {
             // map the DUARTs
             AddrSpaceMapping mapping0 = AddrSpaceMapping();
@@ -118,6 +127,14 @@ namespace Iris
 
             AddrSpace::AddMapping(mapping0);
             AddrSpace::AddMapping(mapping1);
+
+            duartExtension = new CoherentExtensionDUART68681(this);
+            Coherent::RegisterExtension(duartExtension);
+        }
+
+        void Shutdown() override
+        {
+            delete duartExtension;
         }
 
         const char* GetName() { return "Dual Signetics SCN68681 UART (IP2/U130 + IP2/U131)"; };
@@ -196,8 +213,10 @@ namespace Iris
         void UpdateDataFrameState(int32_t duart, int32_t channel);
         void UpdateInterruptState(int32_t duart, int32_t channel);
 
-        void RxClock();
-        void TxClock();
+        void OnRxClock();
+        void OnTxClock();
+        void SetRxClock(uint32_t hz);
+        void SetTxClock(uint32_t hz);
 
         // Baud rate constants
 
@@ -207,5 +226,8 @@ namespace Iris
         // RX/TX CLock 
         uint64_t rxClkNs;
         uint64_t txClkNs;
+
+        CoherentExtensionDUART68681* duartExtension;
     };
+
 }

@@ -25,10 +25,23 @@ namespace Iris
         char name[STRING_MAX_SHORT];
     };
 
+    // enumerates types of coherent extensions
+    enum CoherentExtensionType
+    {
+        /// @brief A type of extension that is added to the peripheral menu. The default value
+        PeripheralsMenu = 0,
+
+        /// @brief A custom menu.
+        CustomMenu = 1,
+    };
+
     /// @brief defines a command extension object. all types that implement this must inherit from this class.
     /// the objects are automatically added to the menu
     class CoherentExtension
     {
+        friend class Coherent;
+        friend class CoherentUI;
+
     public:
         Component* component; 
         bool enabled = false; 
@@ -54,8 +67,24 @@ namespace Iris
         /// @brief Add the UI for a Coherent extension. Currently it gets added to the Peripherals menu.
         virtual void AddUI() { };
 
+        /// @brief Add the UI for a custom Coherent menu. Note: Control of the menu bar is up to you. Your method is called right before the EndMenu on the main
+        /// coherent window. Coherent takes care of calling BeginMenu (with a boolean indicating if the menu was clicked) and EndMenu for you.
+        virtual void AddCustomMenu(bool menuWasClicked) { };
+
+        // Getters for private methods
+
+        // Setters for private methods
+        virtual void SetExtensionType(CoherentExtensionType extensionType) { this->extensionType = extensionType; };
+
+        /// @brief Set the menu name. If this is not called the component name will be used as the menu name.
+        /// @param name The menu name to use
+        virtual void SetMenuName(const char* name) { strncpy(menuName, name, STRING_MAX_SHORT); };
     private:
         std::vector<CoherentCommand*> commands;
+
+        /// @brief An optional menu name to give your extension.
+        char menuName[STRING_MAX_SHORT] = {0};
+        CoherentExtensionType extensionType = CoherentExtensionType::PeripheralsMenu;
     };
 
     /// @brief Defines a coherent system. A system is e.g. a CPU which is being debugged
@@ -305,6 +334,7 @@ namespace Iris
         inline static bool initialised;
 
         /// @brief the list of extensions
+        /// NOTE: COherent will just clear its list. It's up to your component to delete the extension pointer.
         inline static std::vector<CoherentExtension*> extensions;
 
         /// @brief the current coherent system

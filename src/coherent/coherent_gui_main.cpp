@@ -65,8 +65,9 @@ namespace Iris
 
                     for (CoherentExtension* extension : Coherent::extensions)
                     {
-                        if (ImGui::MenuItem(extension->component->GetName()))
-                            extension->enabled = true; 
+                        if (extension->extensionType == CoherentExtensionType::PeripheralsMenu)
+                            if (ImGui::MenuItem(extension->component->GetName()))
+                                extension->enabled = true; 
                     }
 
                     ImGui::EndMenu();
@@ -96,6 +97,25 @@ namespace Iris
                     ImGui::EndMenu();
                 }
  
+                // Add custom menu type extensions
+                for (CoherentExtension* extension : Coherent::extensions)
+                {
+                    if (extension->extensionType == CoherentExtensionType::CustomMenu)
+                    {
+                        bool clicked = false; 
+
+                        if (extension->menuName[0] == '\0')
+                            clicked = ImGui::BeginMenu(extension->component->GetName());
+                        else
+                            clicked = ImGui::BeginMenu(extension->menuName);
+
+                        // tell the extension that we clicked it in case they don't want to add any child menu options
+                        extension->AddCustomMenu(clicked);
+                        
+                        ImGui::EndMenu();
+                    }
+                }
+
                 ImGui::EndMenuBar();
             }
 

@@ -15,7 +15,6 @@
 
 namespace Iris
 {
-    
     uint8_t DUART68681::OnRead8(size_t addr)
     {
         addr = addr & (DUART_NUM_REGS - 1);
@@ -24,7 +23,11 @@ namespace Iris
         DUART duart = duarts[duartId];
         
         // bit 4 is used for channel selection on channel regs
-        int32_t channel = (addr & 0x08); 
+        int32_t channel = 0;
+
+        if (addr & 0x08)
+            channel = 1;
+
         uint8_t ret = 0;
         uint8_t mrPtr = 0;
 
@@ -50,7 +53,6 @@ namespace Iris
                 break;
             case DUART_READ_STATUS_A:
             case DUART_READ_STATUS_B:
-
                 ret = duart.channels[channel].status;
                 break;
                 // non standard bit rates
@@ -102,7 +104,7 @@ namespace Iris
         if (mustUpdateInterrupts)
             UpdateInterruptState(duartId, channel);
 
-        Logger::Log(DUART_LOG_PREFIX, std::format("DUART{} read8 from addr 0x{:x}", duartId, addr).c_str(), LogChannels::Debug);
+        Logger::Log(DUART_LOG_PREFIX, std::format("DUART{} read8 0x{:x} from addr 0x{:x}", duartId, ret, addr).c_str(), LogChannels::Debug);
 
         return ret; 
     }
@@ -126,7 +128,12 @@ namespace Iris
 
         DUART& duart = duarts[duartId];
 
-        int32_t channel = (addr & 0x08); 
+        // bit 4 is used for channel selection on channel regs
+        int32_t channel = 0;
+
+        if (addr & 0x08)
+            channel = 1;
+            
         uint8_t ret = 0;
         uint8_t mrPtr = 0;
 
@@ -157,6 +164,8 @@ namespace Iris
                 SetBaudRate(duartId, channel, false, (value & 0x0F));
                 SetBaudRate(duartId, channel, true, ((value >> 4) & 0x0F));
 
+                SetRxClock(duart.channels[channel].baudRateRX);
+                SetTxClock(duart.channels[channel].baudRateTX);
 
                 break;
 
@@ -186,10 +195,6 @@ namespace Iris
         OnWrite8(addr, (value + 3) & 0x000000FF);
     }
 
-    void DUART68681::Tick()
-    {
-        // there's two clocks so we run our own clocks
-    }
 
     void DUART68681::SetBaudRate(int32_t duart, int32_t channelId, bool isRx, uint8_t data)
     {
@@ -224,12 +229,12 @@ namespace Iris
         
         if (!isRx)
         {
-            Logger::Log(DUART_LOG_PREFIX, std::format("DUART{} channel {}: Transmit baud rate is now {}", duart, channelId, baudRate).c_str(), LogChannels::Warning);
+            Logger::Log(DUART_LOG_PREFIX, std::format("DUART{} channel {}: Transmit baud rate is now {}", duart, channelId, baudRate).c_str(), LogChannels::Debug);
             channel.baudRateTX = baudRate;
         }
         else
         {
-            Logger::Log(DUART_LOG_PREFIX, std::format("DUART{} channel {}: Receive baud rate is now {}", duart, channelId, baudRate).c_str(), LogChannels::Warning);
+            Logger::Log(DUART_LOG_PREFIX, std::format("DUART{} channel {}: Receive baud rate is now {}", duart, channelId, baudRate).c_str(), LogChannels::Debug);
             channel.baudRateRX = baudRate;           
         }
 
@@ -244,4 +249,36 @@ namespace Iris
     {
         
     }
+
+    //
+    // TICK method + CLOCK
+    //
+    //
+
+    void DUART68681::Tick()
+    {
+        // there's two clocks so we run our own clocks
+
+    }
+
+    void DUART68681::OnRxClock()
+    {
+
+    }
+
+    void DUART68681::OnTxClock()
+    {
+
+    }
+
+    void DUART68681::SetRxClock(uint32_t hz)
+    {
+
+    }
+
+    void DUART68681::SetTxClock(uint32_t hz)
+    {
+
+    }
+
 }

@@ -9,10 +9,7 @@ namespace Iris
     class ComponentCPU : public Component
     {
     public:
-        
-        /// @brief Returns the clock speed of the CPU in hertz
-        /// @return Returns the clock speed of the CPU in hertz
-        virtual uint32_t GetClockSpeed() { return 0; }; 
+    
 
         /// @brief See Iris::Component::IsCPU
         /// @return See Iris::Component::IsCPU

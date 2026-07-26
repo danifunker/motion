@@ -18,6 +18,7 @@ namespace Iris
     extern Cvar* logIP2MMU;
 
     #define MMU_LOG_CHANNEL_NAME    "IP2 MMU"
+    #define LOG_PREFIX_IP2MMU   "Emulation - IP2 MMU"
 
     //
     // Registers
@@ -75,6 +76,11 @@ namespace Iris
 
             if (logEnabled)
                 Logger::SetChannelEnabled(MMU_LOG_CHANNEL_NAME);
+        }
+
+        void Shutdown() override
+        {
+            delete mmuExtension;
         }
 
         const char* GetName() { return "IRIS 3130 TTL MMU"; };

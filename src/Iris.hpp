@@ -43,7 +43,6 @@
 #define LOG_PREFIX_CORE     "Core"
 #define LOG_PREFIX_MAPPING  "Emulation - Memory Mapping"
 #define LOG_PREFIX_PROM     "Emulation - PROM"
-#define LOG_PREFIX_IP2MMU   "Emulation - IP2 MMU"
 
 // Some string lengths
 #define STRING_MAX_SHORT    48
@@ -60,6 +59,6 @@
 
 #define WRITE_32TO16(x, old, addr)  x &= (~0xFFFF << (addr & 3) << 3); \
                                     x |= (old << ((addr & 3) << 3))     
-                                    
+
 // Lets the programmer know if we are deliberately allowing a falltrhough            
 #define fallthrough
