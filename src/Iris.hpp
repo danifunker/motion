@@ -53,12 +53,19 @@
 #define READ_32TO8(x, addr) (uint8_t)(x >> ((addr & 3) << 3) & 0xFF)
 #define READ_32TO16(x, addr)(uint16_t)(x >> ((addr & 3) << 3) & 0xFFFF)
 
-#define WRITE_32TO8(x, old, addr)   x &= (~0xFF << (addr & 3) << 3); \
-                                    x |= (old << ((addr & 3) << 3))
+#define WRITE_32TO8(x, old, addr)       x &= (~0xFF << (addr & 3) << 3); \
+                                        x |= (old << ((addr & 3) << 3))
                             
 
-#define WRITE_32TO16(x, old, addr)  x &= (~0xFFFF << (addr & 3) << 3); \
-                                    x |= (old << ((addr & 3) << 3))     
+#define WRITE_32TO16(x, old, addr)      x &= (~0xFFFF << (addr & 3) << 3); \
+                                        x |= (old << ((addr & 3) << 3))     
 
 // Lets the programmer know if we are deliberately allowing a falltrhough            
 #define fallthrough
+
+// Flips the state of a mask
+#define FLIP_MASK_STATE(dst, cond)      if (dst & cond) \
+                                            dst &= ~(cond); \
+                                        else \
+                                            dst |= cond
+                                            
