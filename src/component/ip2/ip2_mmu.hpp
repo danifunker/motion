@@ -18,7 +18,7 @@ namespace Iris
     extern Cvar* logIP2MMU;
 
     #define MMU_LOG_CHANNEL_NAME    "IP2 MMU"
-    #define LOG_PREFIX_IP2MMU   "Emulation - IP2 MMU"
+    #define LOG_PREFIX_IP2MMU       "Emulation - IP2 MMU"
 
     //
     // Registers
@@ -52,7 +52,7 @@ namespace Iris
     // not sure hwy sgi decided that addresses must be so sparse that bit fucking 24 needed to be the register selector.
     // FOR COMPONENTS, WE DON'T NEED TO BOUNDS CHECK BECAUSE WE ALREADY MAPPED IT!
 
-    class MMU_IP2 : public Component
+    class IP2MMU : public Component
     {
     public: 
         void Start()

@@ -30,9 +30,10 @@ namespace Iris
         machine.AddComponent<MC68020>();
         machine.AddComponent<PROM>();
         machine.AddComponent<PROM_SRAM>();
-        machine.AddComponent<MMU_IP2>();
+        machine.AddComponent<IP2MMU>();
         machine.AddComponent<DUART68681>();
         machine.AddComponent<IP2Switches>();
+        machine.AddComponent<IP2Clock>();
         machine.Start();
 
         // enter the coherent debugger
@@ -57,6 +58,8 @@ namespace Iris
     
     void Emulation::Reset()
     {
+        Logger::Log("Resetting emulation...");
+
         Stop();
         Start();
     }
@@ -82,7 +85,8 @@ namespace Iris
 
     void Emulation::Stop()
     {
-        Logger::Log("Resetting emulation...");
+        // Used by both Reset() (which immediately Start()s again) and Shutdown() (which doesn't), so the actual
+        // "why" gets logged by whichever of those called us rather than here.
 
         // make sure the machine is joinable
         SetRunning(false);

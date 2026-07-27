@@ -48,7 +48,12 @@ namespace Iris
 
         Logger::Log("Shutting down...");
 
-        Logger::Shutdown(); 
+        // Without this, the emulation thread and every component's Shutdown() (which e.g. asks DUART68681's
+        // serial lines to disconnect and stop their background reader threads) never actually runs on a normal
+        // window close - everything just gets abandoned mid-flight instead of being told to stop.
+        Emulation::Shutdown();
+
+        Logger::Shutdown();
 
         return EXIT_SUCCESS;
     }

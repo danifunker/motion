@@ -6,7 +6,7 @@ namespace Iris
 {
     void CoherentExtensionIP2MMU::AddUI()
     {
-        MMU_IP2* mmu = (MMU_IP2*)component;
+        IP2MMU* mmu = (IP2MMU*)component;
 
         ImGui::SetNextWindowSize(ImVec2(400, 200));
 

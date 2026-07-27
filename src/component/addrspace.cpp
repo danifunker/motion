@@ -29,7 +29,10 @@ namespace Iris
             return mapping->component->OnRead8(addr);
         }
         else
+        {
+            Logger::Log(LOG_PREFIX_MAPPING, std::format("AddrSpace::ReadU8 - Unmapped read from 0x{:x}!", addr).c_str(), LogChannels::Warning);
             return 0;
+        }
     }
     
     uint16_t AddrSpace::ReadU16(size_t addr)
@@ -45,7 +48,10 @@ namespace Iris
             return value;
         }
         else
+        {
+            Logger::Log(LOG_PREFIX_MAPPING, std::format("AddrSpace::ReadU16 - Unmapped read from 0x{:x}!", addr).c_str(), LogChannels::Warning);
             return 0;
+        }
     }
     
     uint32_t AddrSpace::ReadU32(size_t addr)
@@ -66,7 +72,10 @@ namespace Iris
             return value;
         }
         else
+        {
+            Logger::Log(LOG_PREFIX_MAPPING, std::format("AddrSpace::ReadU32 - Unmapped read from 0x{:x}!", addr).c_str(), LogChannels::Warning);
             return 0;
+        }
     }
     
     int8_t AddrSpace::ReadS8(size_t addr)
@@ -120,6 +129,8 @@ namespace Iris
         {
             return mapping->component->OnWrite8(addr, value);
         }
+        else
+            Logger::Log(LOG_PREFIX_MAPPING, std::format("AddrSpace::WriteU8 - Unmapped write of 0x{:x} to 0x{:x}!", value, addr).c_str(), LogChannels::Warning);
     }
 
     void AddrSpace::WriteU16(size_t addr, uint16_t value)
@@ -132,6 +143,8 @@ namespace Iris
             value = (value >> 8) | (value << 8);
             return mapping->component->OnWrite16(addr, value);
         }
+        else
+            Logger::Log(LOG_PREFIX_MAPPING, std::format("AddrSpace::WriteU16 - Unmapped write of 0x{:x} to 0x{:x}!", value, addr).c_str(), LogChannels::Warning);
     }
 
     void AddrSpace::WriteU32(size_t addr, uint32_t value)
@@ -148,6 +161,8 @@ namespace Iris
 
             return mapping->component->OnWrite32(addr, value);
         }
+        else
+            Logger::Log(LOG_PREFIX_MAPPING, std::format("AddrSpace::WriteU32 - Unmapped write of 0x{:x} to 0x{:x}!", value, addr).c_str(), LogChannels::Warning);
     }
 
     void AddrSpace::WriteS8(size_t addr, int8_t value)

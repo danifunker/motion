@@ -9,7 +9,6 @@ namespace Iris
     class ComponentCPU : public Component
     {
     public:
-    
 
         /// @brief See Iris::Component::IsCPU
         /// @return See Iris::Component::IsCPU

@@ -14,7 +14,7 @@
 namespace Iris
 {
     // Temp until convars are a thi9ng
-    #define CONFIG_PATH "Iris.cfg"
+    #define CONFIG_PATH "Motion.cfg"
 
     class Emulation
     {
