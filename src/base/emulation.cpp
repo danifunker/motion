@@ -55,7 +55,12 @@ namespace Iris
             
         renderer->FramePostRender();
     }
-    
+
+    void Emulation::OnEvent(Event evt)
+    {
+        machine.OnEvent(evt);
+    }
+     
     void Emulation::Reset()
     {
         Logger::Log("Resetting emulation...");

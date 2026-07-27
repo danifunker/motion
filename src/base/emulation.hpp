@@ -6,6 +6,7 @@
 #include <Iris.hpp>
 #include <base/filesystem/filesystem.hpp>
 #include <base/machine/machine.hpp>
+#include <base/event/event.hpp>
 
 // render includes
 #include <render/render.hpp>
@@ -23,9 +24,10 @@ namespace Iris
         static void Start();            // Start emulation
         static void Frame();            // render a frame
         static void Tick();             // run one tick of the system
+        static void OnEvent(Event evt);   // fire an event
         static void Reset();            // reset the emulation
         static void SingleStep();       // run one emulation tick
-        static void Stop();      // shut down
+        static void Stop();             // shut down
         static void Shutdown();     
 
         // Called by components to e.g. get the address space

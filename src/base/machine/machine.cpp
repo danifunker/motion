@@ -50,6 +50,13 @@ namespace Iris
         }
     }
 
+    void Machine::OnEvent(Event evt)
+    {
+        for (Component* component : components)
+        {
+            component->Event(evt);
+        }
+    }
 
     void Machine::Shutdown()
     {

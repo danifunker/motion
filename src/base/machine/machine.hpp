@@ -65,6 +65,9 @@ namespace Iris
             Tick();
         }
 
+        // should this really be from emulation::event or should we use Emulation::GetMachine::OnEvent...
+        void OnEvent(Event evt);
+
         void Shutdown();
 
         // not sure if this is a good idea?

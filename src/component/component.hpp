@@ -1,5 +1,6 @@
 #pragma once
 #include <Iris.hpp>
+#include <base/event/event.hpp>
 
 namespace Iris
 {
@@ -19,7 +20,8 @@ namespace Iris
         virtual uint32_t GetClockSpeed() { return 0; }; 
 
         virtual void Start() { };
-        virtual void Tick() { };        // ticks at clock speed
+        virtual void Tick() { };                // ticks at clock speed
+        virtual void Event(Event evt) { };      // fire an event
         virtual void Shutdown() { };
         
         virtual uint8_t OnRead8(size_t addr) { return 0; };
