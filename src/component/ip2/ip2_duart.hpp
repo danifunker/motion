@@ -22,23 +22,21 @@ namespace Iris
 {
     extern Cvar* logIP2DUART;
 
-    #define DUART_LOG_CHANNEL_NAME          "IP2 DUART"
+    #define DUART_LOG_CHANNEL_NAME                  "IP2 DUART"
 
-    #define DUART0_START                    0x32000000
-    #define DUART1_START                    0x32800000
-    #define DUART_NUM_REGS                  16
-    #define DUART_NUM_INPUT_PORTS           7
+    #define DUART0_START                            0x32000000
+    #define DUART1_START                            0x32800000
+    #define DUART_NUM_REGS                          16
+    #define DUART_NUM_INPUT_PORTS                   7
 
     // There is a small fifo in the 68681 for receiving bits
-    #define DUART_FIFO_SIZE                 3
+    #define DUART_FIFO_SIZE                         3
 
-    #define DUART_NUM_CHANNELS              2
+    #define DUART_NUM_CHANNELS                      2
 
-    // Which (duart chip, channel) raw serial line is connected to the host console by default, and which the
-    // Coherent DUART State window's "PROM Console" section shows. Confirmed against actual PROM output:
-    // Port 2 is DUART0 (0x32000000) channel B.
-    #define DUART_PORT2_DUART_INDEX         0
-    #define DUART_PORT2_CHANNEL             1
+    // Which (duart chip, channel) raw serial line is connected to the host console by default. Also gets shown by the COherent window
+    #define DUART_PORT2_DUART_INDEX                 0
+    #define DUART_PORT2_CHANNEL                     1
 
     //
     // Registers
@@ -180,12 +178,13 @@ namespace Iris
             }
 
             duartExtension = new CoherentExtensionDUART68681(this);
+            duartExtension->SetExtensionType(CoherentExtensionType::CustomMenuItem);
+            duartExtension->SetMenuName("Serial Console");
             Coherent::RegisterExtension(duartExtension);
 
+            // init misc stuff
             logIP2DUART = Cvar::Get("logIP2DUART", "0");
-
             duartChannel = LogChannel(DUART_LOG_CHANNEL_NAME, ConsoleColor::BrightGreen, ConsoleColor::White);
-
             logEnabled = logIP2DUART->GetValue();
 
             if (logEnabled)
@@ -197,7 +196,7 @@ namespace Iris
             delete duartExtension;
         }
 
-        const char* GetName() { return "Dual Signetics SCN68681 UART (IP2/U130 + IP2/U131)"; };
+        const char* GetName() { return "Dual Signetics SCN68681 DUART (IP2/U130 & U131)"; };
 
         int GetDuartIONum(size_t addr) { return (addr & 0x800000) ? 1 : 0; }
 

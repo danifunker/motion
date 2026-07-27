@@ -46,13 +46,6 @@ namespace Iris
         ImVec2 debugContainerPaneSize = ImVec2(290, 600);
         ImVec2 debugContainerChildWindowSize = ImVec2(290, 170);
 
-        // create the UI windows for any extensions if they exist
-        for (CoherentExtension* extension : Coherent::extensions)
-        {
-            if (extension->enabled)
-                extension->AddUI(); 
-        }
-
         if (ImGui::Begin("Coherent Debugger", &Coherent::active, ImGuiWindowFlags_MenuBar))
         {
             if (ImGui::BeginMenuBar())
@@ -68,6 +61,9 @@ namespace Iris
                         if (extension->extensionType == CoherentExtensionType::PeripheralsMenu)
                             if (ImGui::MenuItem(extension->component->GetName()))
                                 extension->enabled = true; 
+
+                        if (extension->enabled)
+                            extension->AddUI();
                     }
 
                     ImGui::EndMenu();
@@ -89,27 +85,44 @@ namespace Iris
 
                     ImGui::EndMenu();
                 }
+
+
  
                 // Add custom menu type extensions
                 for (CoherentExtension* extension : Coherent::extensions)
                 {
+                    const char* name = extension->component->GetName();
+
+                    // if the extension has a specified menu name do that
+                    if (extension->menuName[0] != '\0')
+                        name = extension->menuName;
+
                     if (extension->extensionType == CoherentExtensionType::CustomMenu)
                     {
-                        bool clicked = false; 
 
-                        if (extension->menuName[0] == '\0')
-                            clicked = ImGui::BeginMenu(extension->component->GetName());
-                        else
-                            clicked = ImGui::BeginMenu(extension->menuName);
+                        // we checked already so it can only be custommenunochildren
+                        bool clicked = false;
 
                         // tell the extension that we clicked it in case they don't want to add any child menu options
+                        clicked = ImGui::BeginMenu(name);
+
+                        extension->enabled = clicked;
 
                         if (clicked)
                         {
-                            extension->AddMenu();
-                            ImGui::EndMenu();
+                            extension->AddUI();
+                            ImGui::EndMenu();                              
                         }
+                    }
+                    else if (extension->extensionType == CoherentExtensionType::CustomMenuItem)
+                    {
+                        bool clicked = ImGui::MenuItem(name);
 
+                        if (clicked)
+                            extension->enabled = true;
+                        
+                        if (extension->enabled) 
+                            extension->AddUI();
                     }
                 }
 

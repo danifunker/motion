@@ -39,7 +39,7 @@ namespace Iris
     // COHERENT debugger extension
     //
 
-    void CoherentExtensionIP2Switches::AddMenu()
+    void CoherentExtensionIP2Switches::AddUI()
     {
         // cond for determing checkbox state of menu
         bool cond = false;

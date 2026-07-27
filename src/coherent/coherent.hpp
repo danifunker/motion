@@ -33,6 +33,9 @@ namespace Iris
 
         /// @brief A custom menu.
         CustomMenu = 1,
+
+        /// @brief A custom menu *item* on the main coherent menu
+        CustomMenuItem = 2,
     };
 
     /// @brief defines a command extension object. all types that implement this must inherit from this class.
@@ -64,12 +67,9 @@ namespace Iris
             commands.push_back(command);
         }
 
-        /// @brief Add the UI for a Coherent extension. Currently it gets added to the Peripherals menu.
+        /// @brief Add the UI for a Coherent extension. Based on the type of the UI it either gets added to the peripherals menu, as a
+        /// custom menu or as a customm enu item
         virtual void AddUI() { };
-
-        /// @brief Add the UI for a custom Coherent menu. Note: Control of the menu bar is up to you. Your method is called right before the EndMenu on the main
-        /// coherent window. Coherent takes care of calling BeginMenu (with a boolean indicating if the menu was clicked) and EndMenu for you.
-        virtual void AddMenu() { };
 
         // Getters for private methods
 

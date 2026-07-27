@@ -17,7 +17,7 @@ namespace Iris
     public:
         CoherentExtensionIP2Switches(Component* owner) : CoherentExtension(owner) {}
 
-        void AddMenu() override;
+        void AddUI() override;
     };
 
     class IP2Switches : public Component

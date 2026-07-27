@@ -2,13 +2,15 @@
 /*
     INI parser
     Required Information for Config
+
+    1.0.0:      Initial release                             June 4, 2026
+    1.0.1:      Added additional INISection constructor     July 27, 2026
 */
 
 #include <Iris.hpp>
 #include <base/filesystem/filesystem.hpp>
 
-
-#define STRING_VERSION          "StarfrostLib/INI Version 1.0 - June 4, 2026"
+#define STRING_VERSION          "StarfrostLib/INI Version 1.0.1 - July 27, 2026"
 
 namespace Iris
 {
@@ -25,6 +27,11 @@ namespace Iris
         INISection()
         {
             
+        }
+
+        INISection(const char* name)
+        {
+            strncpy(this->name, name, STRING_MAX_SHORT);
         }
     };
 

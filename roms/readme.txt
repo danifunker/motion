@@ -25,16 +25,21 @@ Coherent window - debugger
         Catchpoints
             Don't work yet
 
+    MENU ITEMS:
+
     Peripherals - lets you access the peripheral debuggers.
         IP2 MMU - Debug SGI's TTL MMU and view the pagetable.
         DUART - Debug the serial DUARTs.
 
     Style - lets you change style. The styles currently suck
     System Configuration - reconfigure the IRIS's back panel switches.
+    Serial Console - Access the PROM console, ? is help.
 
 Command line:
 +set - set a convar.
     logIP2MMU - Log the IP2 MMU.
+    logIP2DUART - Log the IP2 DUART.
+    logIP2RTC - Log the IP2 RTC.
 
 Not done:
     - Reconfigurable machines
