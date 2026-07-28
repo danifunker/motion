@@ -95,7 +95,7 @@ namespace Iris
         if (ImGui::BeginChild(headerText, size, ImGuiChildFlags_None, ImGuiWindowFlags_HorizontalScrollbar))
         {                
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1f, 0.8f, 1.0f, 1.0f));
-            ImGui::Text(headerText);
+            ImGui::Text("%s", headerText); //shutup compiler by doing this
             ImGui::PopStyleColor();
 
             // if the user clicked the add button or hit enter, add the guard

@@ -62,10 +62,9 @@ namespace Iris
 
             strncpy(logWindowBuf, (logBuffer + offset), copySize);
             logWindowBuf[copySize] = '\0';
-            ImGui::Text(logWindowBuf);
+            ImGui::Text("%s", logWindowBuf); // doing this shuts up the compiler
 
             ImGui::SetScrollHereY(1.0f);
-            
         } 
 
         ImGui::End();
