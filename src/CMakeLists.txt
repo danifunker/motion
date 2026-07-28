@@ -48,6 +48,6 @@ add_executable(motion
     component/serial/serial.cpp
     component/ip2/ip2_dip_switches.cpp
     base/event/event.cpp
-    base/config/config.cpp
+    base/profile/profile.cpp
 )
 

@@ -71,7 +71,6 @@ namespace Iris
 
                 // Help / about window 
 
-
                 if (ImGui::BeginMenu("Style"))
                 {
                     if (ImGui::MenuItem("IMGUI Default"))
@@ -87,7 +86,6 @@ namespace Iris
                 }
 
 
- 
                 // Add custom menu type extensions
                 for (CoherentExtension* extension : Coherent::extensions)
                 {
