@@ -32,5 +32,6 @@ namespace Iris
 
     private: 
         size_t GetRamCapacity() { return Emulation::GetMachine().ramCapacity; };
+
     };
 }

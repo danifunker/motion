@@ -7,7 +7,6 @@
     cvar.cpp: Console variables that allow global configuration implementation
 */
 
-
 #include <base/cvar/cvar.hpp>
 
 namespace Iris

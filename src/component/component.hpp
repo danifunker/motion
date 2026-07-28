@@ -42,6 +42,10 @@ namespace Iris
         /// @return A boolean indicating if this is a Serial Port.
         virtual bool IsSerialPort() { return false; };
 
+        /// @brief True if this component is an MMU.
+        /// @return A boolean indicating if this is a Serial Port.
+        virtual bool IsMMU() { return false; }; 
+
         /// @brief get the name of this component. immutable const char*.
         virtual const char* GetName() { return "Name this component by overriding Component::GetName!"; };
     };

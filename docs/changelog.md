@@ -2,8 +2,7 @@
 
 Similar to a .plan file
 
-**** WILL START 7/28 ****
+## 2026-07-28
 
-## Current Todo for any date:
-
-* make components return a boolean so they can indicate to the overall emulation their success
+* added kernel and stack segment memory mappings
+    * will be tied into mmu MemorySegment system

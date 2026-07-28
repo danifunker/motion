@@ -40,6 +40,11 @@ Command line:
     logIP2MMU - Log the IP2 MMU.
     logIP2DUART - Log the IP2 DUART.
     logIP2RTC - Log the IP2 RTC.
+    profileLocation - the location of the profile
+        RESET the profile - delete every folder in this folder.
+
+        Profile files:
+            ip2_sram.hpp: Private PROM SRAM.
 
 Not done:
     - Reconfigurable machines

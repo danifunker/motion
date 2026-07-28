@@ -1,3 +1,12 @@
+/* 
+    m  o  t  i  o  n
+    The SGI Emulator
+
+    Copyright (c)2026 starfrost
+
+    addrspace.hpp : Implements the address space mapping system and also interfaces with an optional MMU
+*/
+
 #pragma once
 
 #include <Iris.hpp>
