@@ -37,13 +37,16 @@
 #define APP_SIGNON          "The SGI Emulator\nEmulation engine © 2026 starfrost\nOriginal hardware and software by Silicon Graphics, Inc. © 1981-1989"
 #define APP_VERSION         "@ " __DATE__ " " __TIME__
 
+// Exit codes
 #define EXIT_SUCCESS        0
 #define EXIT_FAILURE        1
 
-// Log prefixes
+// Log prefixes (these will all be moved)
 #define LOG_PREFIX_CORE     "Core"
 #define LOG_PREFIX_MAPPING  "Emulation - Memory Mapping"
 #define LOG_PREFIX_PROM     "Emulation - PROM"
+
+#define ARRAY_ELEMS(x)       sizeof(x)/sizeof(x[0])
 
 // Some string lengths
 #define STRING_MAX_SHORT    48
