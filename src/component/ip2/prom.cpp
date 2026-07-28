@@ -18,7 +18,7 @@ namespace Iris
         // read in the rom, then close
         FileStream* prom = Filesystem::Open(promPath->GetString(), FileFlags::Binary);
 
-        if (!prom)
+        if (!prom) // noreturn
             Logger::Log("Failed to open PROM", LogChannels::FatalError);
   
         prom->stream.read((char*)rom, promSize->GetValue());

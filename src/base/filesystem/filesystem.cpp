@@ -13,24 +13,24 @@ namespace Iris
 
         auto flags = std::ios_base::in | std::ios_base::out;
 
-        if (mode & FileFlags::Binary)
-            flags |= std::ios_base::binary;
-
         //these should probably be exclusive
         if (mode & FileFlags::CreateOrOpen)
             flags |= std::ios_base::app;
         else if (mode & FileFlags::Create)
-            flags |= std::ios_base::trunc;
-        
+            flags = std::ios::out | std::ios::trunc;
+
+        if (mode & FileFlags::Binary)
+            flags |= std::ios_base::binary;
+     
         fc->stream.open(path, flags);
     
-        if (fc->stream.bad())
+        if (fc->stream.fail())
         {
             delete fc;
             //todo: fileflags for optional logging
 
             if (mode & FileFlags::LogOnFail)
-                Logger::Log(std::format("Filesystem::Open with FileFlags::LogOnFail set - Failed to Open file {}, FileFlags {}", path, mode).c_str());
+                Logger::Log(std::format("Filesystem::Open with FileFlags::LogOnFail set - Failed to Open file {}, FileFlags {}", path, (size_t)mode).c_str());
 
             return nullptr;
         }

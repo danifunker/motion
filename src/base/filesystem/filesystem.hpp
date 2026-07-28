@@ -15,7 +15,6 @@ namespace Iris
     public: 
         // the stream of the file
         std::fstream stream;
-        bool open;
     };
 
     enum FileFlags
@@ -31,7 +30,8 @@ namespace Iris
     {
     public:
         static FileStream* Open(const char* path, FileFlags mode = FileFlags::Text);
-        static void Close(FileStream* con);
+        static void Seek(FileStream* fs, size_t offset);
+        static void Close(FileStream* fs);
 
     };
 }; 

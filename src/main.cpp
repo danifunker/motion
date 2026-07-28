@@ -5,6 +5,7 @@ Copyright (C) 2026 starfrost
 
 #include <Iris.hpp>
 #include <base/emulation.hpp>
+#include <base/profile/profile.hpp>
 #include <iostream>
 
 namespace Iris
@@ -29,30 +30,20 @@ namespace Iris
 
         Logger::Log(APP_NAME " " APP_VERSION);
         Logger::Log(APP_SIGNON, LogChannels::Message);
-        CommandLine::Parse(argc, argv);
-
-        Emulation::Init();
+        CommandLine::Parse(argc, argv);                     // parse command line
+        Profile::Init();                                    // init config for user profile
+        Emulation::Init();                                  // start emulation thread
         
         // run the emulation
         // todo: needs to run on its own thread
 
         while (Emulation::IsRunning())
-        {            
             Emulation::Frame();
-
-            // Each component ticks at its own speed. So we implement the tickrate in the Emulation class.
-            // Emulation::Tick runs in its own thread. The renderer runs in a separate thread
-            //Emulation::Tick();
-                
-        }   
 
         Logger::Log("Shutting down...");
 
-        // Without this, the emulation thread and every component's Shutdown() (which e.g. asks DUART68681's
-        // serial lines to disconnect and stop their background reader threads) never actually runs on a normal
-        // window close - everything just gets abandoned mid-flight instead of being told to stop.
+        // shut down the emulation
         Emulation::Shutdown();
-
         Logger::Shutdown();
 
         return EXIT_SUCCESS;

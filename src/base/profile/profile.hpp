@@ -36,7 +36,7 @@ namespace Iris
         /// @param skipProfileAddition if this is true, a temporary bufer of the right size will be created and passed into filesystem::open
         static FileStream* Open(const char* path, FileFlags mode = FileFlags::Text, bool skipProfileAddition = false);
 
-        /// @brief this method does the same thing as Filesystem::Close.
+        /// @brief this method does the same thing as Filesystem::Close. YOU MUST SET TO NULLPTR, your stream is DEAD
         static void Close(FileStream* fs);
     }; 
 }; 
