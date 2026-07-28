@@ -18,16 +18,19 @@ namespace Iris
         bool open;
     };
 
-    enum FileMode
+    enum FileFlags
     {
         Text = 1,
         Binary = 1 << 1,
+        Create = 1 << 2,
+        CreateOrOpen = 1 << 3,
+        LogOnFail = 1 << 4,
     }; 
 
     class Filesystem
     {
     public:
-        static FileStream* Open(const char* path, FileMode mode = FileMode::Text);
+        static FileStream* Open(const char* path, FileFlags mode = FileFlags::Text);
         static void Close(FileStream* con);
 
     };

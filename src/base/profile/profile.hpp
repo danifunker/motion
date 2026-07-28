@@ -34,7 +34,7 @@ namespace Iris
         /// @param path the path to open
         /// @param mode the mode to open the file with
         /// @param skipProfileAddition if this is true, a temporary bufer of the right size will be created and passed into filesystem::open
-        static FileStream* Open(const char* path, FileMode mode = FileMode::Text, bool skipProfileAddition = false);
+        static FileStream* Open(const char* path, FileFlags mode = FileFlags::Text, bool skipProfileAddition = false);
 
         /// @brief this method does the same thing as Filesystem::Close.
         static void Close(FileStream* fs);

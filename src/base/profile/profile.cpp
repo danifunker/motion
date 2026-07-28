@@ -32,7 +32,7 @@ namespace Iris
 
     // helper methods
 
-    FileStream* Profile::Open(const char* path, FileMode mode, bool skipProfileAddition)
+    FileStream* Profile::Open(const char* path, FileFlags mode, bool skipProfileAddition)
     {
         if (!skipProfileAddition)
         {

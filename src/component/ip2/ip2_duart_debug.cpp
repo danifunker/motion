@@ -96,7 +96,7 @@ namespace Iris
 
         ImGui::SetNextWindowSize(ImVec2(520, 700), ImGuiCond_FirstUseEver);
 
-        if (ImGui::Begin("DUART State", &enabled))
+        if (ImGui::Begin("Serial Console & DUART State", &enabled))
         {
             // The PROM in serial console mode uses DUART 0 Channel B, or as sgi called it, Port2.
             int32_t consoleLineNum = duartComponent->GetLineIndex(DUART_PORT2_DUART_INDEX, DUART_PORT2_CHANNEL);

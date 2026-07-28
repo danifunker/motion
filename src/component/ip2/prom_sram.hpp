@@ -1,6 +1,7 @@
 #pragma once 
 #include <Iris.hpp>
 #include <base/filesystem/filesystem.hpp>
+#include <base/profile/profile.hpp>
 #include <component/addrspace.hpp>
 
 namespace Iris
@@ -12,6 +13,8 @@ namespace Iris
     #define SRAM_SIZE           2048
 
     // FOR COMPONENTS, WE DON'T NEED TO BOUNDS CHECK BECAUSE WE ALREADY MAPPED IT!
+
+    extern Cvar* profileSramLocation;
 
     class PROM_SRAM : public Component
     {
@@ -25,6 +28,17 @@ namespace Iris
             mapping.endAddr = mapping.startAddr + SRAM_SIZE;
             mapping.component = this;
             AddrSpace::AddMapping(mapping);
+        
+            profileSramLocation = Cvar::Get("profileSramLocation", "ip2_sram.bin");
+
+            // try and open a folder in the profile
+            
+            sramFile = Profile::Open(profileSramLocation->GetString(), FileFlags::Binary);
+            
+            if (sramFile)
+            {
+                
+            }
         }
 
         const char* GetName() { return "IRIS 3130 System PROM Private SRAM [MCM2016HN16 - IP2/U95]"; };
@@ -71,5 +85,7 @@ namespace Iris
 
     private: 
         uint8_t sram[SRAM_SIZE];
+
+        FileStream* sramFile;
     };
 }
