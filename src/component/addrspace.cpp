@@ -1,4 +1,5 @@
 #include <component/addrspace.hpp>
+#include <base/emulation.hpp>
 
 namespace Iris
 {
@@ -22,11 +23,19 @@ namespace Iris
 
     uint8_t AddrSpace::ReadU8(size_t addr)
     {
-        AddrSpaceMapping* mapping = GetMapping(addr);
+        size_t realAddr = addr;
+
+        if (mmu)
+        {
+            if (!mmu->Translate(addr, &realAddr, false))
+                return 0xFF; // ****temp - add bus error ****
+        }
+
+        AddrSpaceMapping* mapping = GetMapping(realAddr);
 
         if (mapping)
         {
-            return mapping->component->OnRead8(addr);
+            return mapping->component->OnRead8(realAddr);
         }
         else
         {
@@ -37,11 +46,19 @@ namespace Iris
     
     uint16_t AddrSpace::ReadU16(size_t addr)
     {
-        AddrSpaceMapping* mapping = GetMapping(addr);
+        size_t realAddr = addr;
+
+        if (mmu)
+        {
+            if (!mmu->Translate(addr, &realAddr, false))
+                return 0xFF; // ****temp - add bus error ****
+        }
+
+        AddrSpaceMapping* mapping = GetMapping(realAddr);
 
         if (mapping)
         {
-            auto value = mapping->component->OnRead16(addr);
+            auto value = mapping->component->OnRead16(realAddr);
             // IRIS is a big-endian system
             value = (value >> 8) | (value << 8); 
 
@@ -56,12 +73,20 @@ namespace Iris
     
     uint32_t AddrSpace::ReadU32(size_t addr)
     {
-        AddrSpaceMapping* mapping = GetMapping(addr);
+        size_t realAddr = addr;
+
+        if (mmu)
+        {
+            if (!mmu->Translate(addr, &realAddr, false))
+                return 0xFF; // ****temp - add bus error ****
+        }
+
+        AddrSpaceMapping* mapping = GetMapping(realAddr);
 
         if (mapping)
         {
             // IRIS is a big-endian system
-            auto value = mapping->component->OnRead32(addr);
+            auto value = mapping->component->OnRead32(realAddr);
 
             // IRIS is a big-endian system.
             value = ((((value) & 0xff000000) >> 24)|
@@ -95,6 +120,10 @@ namespace Iris
 
     void AddrSpace::AddMapping(AddrSpaceMapping mapping)
     {
+        // this seems like a good place to put this
+        // paranoid assumption of the mmu location
+        // BAD CODE HACK
+
         if (mapping.startAddr > mapping.endAddr)
         {
             Logger::Log(LOG_PREFIX_MAPPING, "AddrSpace::AddMapping - mapping.StartAddr > mapping.endAddr", LogChannels::Error);
@@ -114,7 +143,7 @@ namespace Iris
             Logger::Log(LOG_PREFIX_MAPPING, "AddrSpace::AddMapping - mapping doesn't have an attached component!", LogChannels::Error);
             return; 
         }
-    
+
         Logger::Log(LOG_PREFIX_MAPPING, std::format("Added address mapping from 0x{:x} to 0x{:x} (size 0x{:x}) for component {}",
             mapping.startAddr, mapping.endAddr, (mapping.endAddr - mapping.startAddr), mapping.component->GetName()).c_str(), LogChannels::Debug);
         
@@ -123,11 +152,19 @@ namespace Iris
 
     void AddrSpace::WriteU8(size_t addr, uint8_t value)
     {
-        AddrSpaceMapping* mapping = GetMapping(addr);
+        size_t realAddr = addr;
+
+        if (mmu)
+        {
+            if (!mmu->Translate(addr, &realAddr, true))
+                return; // ****temp - add bus error ****
+        }
+
+        AddrSpaceMapping* mapping = GetMapping(realAddr);
 
         if (mapping)
         {
-            return mapping->component->OnWrite8(addr, value);
+            return mapping->component->OnWrite8(realAddr, value);
         }
         else
             Logger::Log(LOG_PREFIX_MAPPING, std::format("AddrSpace::WriteU8 - Unmapped write of 0x{:x} to 0x{:x}!", value, addr).c_str(), LogChannels::Warning);
@@ -135,13 +172,21 @@ namespace Iris
 
     void AddrSpace::WriteU16(size_t addr, uint16_t value)
     {
-        AddrSpaceMapping* mapping = GetMapping(addr);
+        size_t realAddr = addr;
+
+        if (mmu)
+        {
+            if (!mmu->Translate(addr, &realAddr, true))
+                return; // ****temp - add bus error ****
+        }
+
+        AddrSpaceMapping* mapping = GetMapping(realAddr);
 
         if (mapping)
         {
             // IRIS is a big-endian system
             value = (value >> 8) | (value << 8);
-            return mapping->component->OnWrite16(addr, value);
+            return mapping->component->OnWrite16(realAddr, value);
         }
         else
             Logger::Log(LOG_PREFIX_MAPPING, std::format("AddrSpace::WriteU16 - Unmapped write of 0x{:x} to 0x{:x}!", value, addr).c_str(), LogChannels::Warning);
@@ -149,7 +194,15 @@ namespace Iris
 
     void AddrSpace::WriteU32(size_t addr, uint32_t value)
     {
-        AddrSpaceMapping* mapping = GetMapping(addr);
+        size_t realAddr = addr;
+
+        if (mmu)
+        {
+            if (!mmu->Translate(addr, &realAddr, true))
+                return; // ****temp - add bus error ****
+        }
+
+        AddrSpaceMapping* mapping = GetMapping(realAddr);
 
         if (mapping)
         {
@@ -159,7 +212,7 @@ namespace Iris
                 (((value) & 0x0000ff00) <<  8) |
                 (((value) & 0x000000ff) << 24));
 
-            return mapping->component->OnWrite32(addr, value);
+            return mapping->component->OnWrite32(realAddr, value);
         }
         else
             Logger::Log(LOG_PREFIX_MAPPING, std::format("AddrSpace::WriteU32 - Unmapped write of 0x{:x} to 0x{:x}!", value, addr).c_str(), LogChannels::Warning);
@@ -178,6 +231,12 @@ namespace Iris
     void AddrSpace::WriteS32(size_t addr, int32_t value)
     {
         WriteU32(addr, (uint32_t)value);
+    }
+
+    void AddrSpace::RegisterMMU(ComponentMMU* mmu)
+    {
+        Logger::Log(LOG_PREFIX_MAPPING, std::format("Addressing system registered an MMU: {}", mmu->GetName()).c_str(), LogChannels::Debug);
+        AddrSpace::mmu = mmu;
     }
 
     void AddrSpace::Shutdown()

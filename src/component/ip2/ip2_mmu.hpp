@@ -13,14 +13,14 @@
 #include <component/addrspace.hpp>
 #include <coherent/coherent.hpp>
 #include <component/mmu/mmu.hpp>
+#include <component/cpu/cpu.hpp>
 
 namespace Iris
 {
     extern Cvar* logIP2MMU;
 
-    #define MMU_LOG_CHANNEL_NAME    "IP2 MMU"
-    #define LOG_PREFIX_IP2MMU       "Emulation - IP2 MMU"
-
+    #define MMU_LOG_CHANNEL_NAME            "IP2 MMU"
+    #define LOG_PREFIX_IP2MMU               "Emulation - IP2 MMU"
     //
     // Registers
     //
@@ -100,6 +100,8 @@ namespace Iris
 
             if (logEnabled)
                 Logger::SetChannelEnabled(MMU_LOG_CHANNEL_NAME);
+
+            AddrSpace::RegisterMMU(this);
         }
 
         void Shutdown() override
@@ -109,6 +111,7 @@ namespace Iris
 
         const char* GetName() { return "IRIS 3130 TTL MMU"; };
 
+        // Register I/O
         uint8_t OnRead8(size_t addr) override;
         uint16_t OnRead16(size_t addr) override;
         uint32_t OnRead32(size_t addr) override;
@@ -116,22 +119,26 @@ namespace Iris
         void OnWrite16(size_t addr, uint16_t value) override;
         void OnWrite32(size_t addr, uint32_t value) override; 
 
+        bool Translate(size_t addr, size_t* finalAddress, bool isWrite) override;
+
         // well probably need to change these so just make them public
-        uint32_t osBase = 0x0;
-        uint32_t status = 0x0;
-        uint32_t parity = 0x0;
-        uint32_t multibusProtect = 0x0;
+
+        // This one is an 8bit register but it is easier for the MMU if we store it like this.
+        uint16_t osBase = 0x0;
+        uint16_t status = 0x0;
+        uint16_t parity = 0x0;
+        uint16_t multibusProtect = 0x0;
         uint32_t pagetable[PAGETABLE_MAX_PAGES] = {0};
-        uint32_t textdataBase = 0x0;
-        uint32_t textdataLimit = 0x0;
-        uint32_t stackBase = 0x0;
-        uint32_t stackLimit = 0x0;
+        uint16_t textdataBase = 0x0;
+        uint16_t textdataLimit = 0x0;
+        uint16_t stackBase = 0x0;
+        uint16_t stackLimit = 0x0;
 
         bool logEnabled = false; 
 
     private: 
         CoherentExtensionIP2MMU* mmuExtension; 
-
+        ComponentCPU* cpu = nullptr;
         LogChannel mmuChannel;
 
     };

@@ -17,8 +17,8 @@ namespace Iris
         /// @brief get the name of this component. immutable const char*.
         const char* GetName() { return "CPU Generic Base Class (error)"; };
 
-        /// @brief Called on a bus error.
-        virtual void BusError(uint32_t addr) { };
-
+        /// @brief returns a boolean indicating if this cpu is in privileged mode. most cpus only have two levels of privilege and x86 has 4, but 2 are almost never used.
+        /// @return a boolean indicating if the cpu is in privileged mode
+        virtual bool IsPrivilegedMode() { return true; };
     };
 }
