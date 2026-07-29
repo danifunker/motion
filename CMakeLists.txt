@@ -67,11 +67,15 @@ add_dependencies(motion InstallAssets)
 # directory (see prom.cpp), so roms/ has to sit next to the executable.
 install(TARGETS motion RUNTIME DESTINATION .)
 
-# OFF by default. The PROM images are SGI firmware, and attaching them to a
-# public release is redistribution of third-party copyrighted material - which
-# is a different thing legally from keeping them in a repo you control.
-option(MOTION_INSTALL_ROMS "Bundle roms/ into the install tree" OFF)
+# On by default so downloads work out of the box - motion cannot start without
+# a PROM image, and requiring people to source one turns a download into a
+# scavenger hunt. Note this does mean builds redistribute SGI firmware.
+# Turn it off with -DMOTION_INSTALL_ROMS=OFF.
+option(MOTION_INSTALL_ROMS "Bundle roms/ into the install tree" ON)
 
 if(MOTION_INSTALL_ROMS)
-    install(DIRECTORY "${ROM_SRC_DIR}/" DESTINATION roms)
+    install(DIRECTORY "${ROM_SRC_DIR}/" DESTINATION roms
+        PATTERN ".DS_Store" EXCLUDE
+        PATTERN "Thumbs.db" EXCLUDE
+    )
 endif()
