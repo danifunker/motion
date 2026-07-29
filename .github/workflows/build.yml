@@ -1,0 +1,72 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x86_64
+            runner: ubuntu-24.04
+          - name: linux-arm64
+            runner: ubuntu-24.04-arm
+          - name: macos-universal
+            runner: macos-latest
+            cmake_extra: '-DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install build dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ninja-build \
+            libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev \
+            libxfixes-dev libxss-dev libxkbcommon-dev \
+            libwayland-dev wayland-protocols libdecor-0-dev \
+            libasound2-dev libpulse-dev libpipewire-0.3-dev libsndio-dev \
+            libudev-dev libdbus-1-dev libibus-1.0-dev \
+            libdrm-dev libgbm-dev libegl1-mesa-dev libgl1-mesa-dev
+
+      - name: Install build dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: brew list ninja >/dev/null 2>&1 || brew install ninja
+
+      - name: Configure
+        run: >
+          cmake -S . -B build -G Ninja
+          -DCMAKE_BUILD_TYPE=Release
+          ${{ matrix.cmake_extra }}
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Stage install tree
+        run: cmake --install build --prefix dist
+
+      - name: Show what we produced
+        run: |
+          ls -lR dist
+          file dist/motion
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: motion-${{ matrix.name }}
+          path: dist/
+          if-no-files-found: error
