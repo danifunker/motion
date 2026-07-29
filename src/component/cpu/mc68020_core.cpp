@@ -51,7 +51,7 @@ namespace Iris
     {
         moiraCpu.execute();
     }
-
+    
     void MC68020::Shutdown()
     {
         delete system;

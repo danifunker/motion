@@ -31,14 +31,6 @@ namespace Iris
 
     class MC68020 : public ComponentCPU
     {
-        #define MC68020_CACHE_SIZE      256
-        #define MC68020_NUM_OPCODES     256
-
-        #define MC68020_NUM_LINES       16
-        #define MC68020_NUM_DATA_REGS   8
-        #define MC68020_NUM_ADDR_REGS   8   // A7 is the s
-
-
     public: 
 
         MC68020MoiraBridge moiraCpu;
@@ -55,8 +47,11 @@ namespace Iris
         void Tick() override;
         void Shutdown() override; 
 
+        // other stuff may be dependent on tih scpu
+        bool earlyStart = true; 
+
         /// @brief get the name of this component. immutable const char*.
-        const char* GetName() { return "Motorola MC68020 CPU (Moira/Lisburn)"; };
+        const char* GetName() { return "Motorola MC68020 CPU (Lisburn)"; };
     private:
         MC68020DebuggerSystem* system; 
 

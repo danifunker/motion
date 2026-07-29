@@ -16,12 +16,10 @@ namespace Iris
 {
     class ComponentMMU : public Component
     {
-        virtual void BusError(uint32_t addr) { };
-
+    public: 
         bool IsMMU() override { return true; };
         
-        // these methods indicate success by their return value and take a translated address
-        virtual bool TranslateRead(uint32_t initialAddress, uint32_t* finalAddress) { };
-        virtual bool TranslateWrite(uint32_t initialAddress, uint32_t* finalAddress) { };
+        // these methods indicate success by their return value, generate a translated address and then send it back to AddrSpace
+        virtual bool Translate(size_t addr, size_t* finalAddress, bool isWrite) { return true;  };
     };
 };

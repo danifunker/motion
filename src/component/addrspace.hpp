@@ -11,6 +11,7 @@
 
 #include <Iris.hpp>
 #include <component/component.hpp>
+#include <component/mmu/mmu.hpp>
 
 namespace Iris
 {
@@ -51,11 +52,18 @@ namespace Iris
  
             static void AddMapping(AddrSpaceMapping mapping);
 
+            /// @brief Reigister a memory management unit
+            /// @param mmu The MMU to register.
+            static void RegisterMMU(ComponentMMU* mmu);
+
             static void Shutdown();
         private: 
             inline static std::unordered_map<size_t, AddrSpaceMapping> mappings;
-
+            
             static AddrSpaceMapping* GetMapping(size_t addr);
+
+            ///pointer to an MMU component
+            inline static ComponentMMU* mmu;
 
     };
 }

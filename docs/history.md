@@ -12,15 +12,20 @@
 
 * February 17, 1983: UC2 board was "obsolete" at this time
 
-* Late 1983 / Early 1984: IRIS 1000 released, shortly followed by IRIS 1200
+* Late 1983: IRIS 1000 released, shortly followed by IRIS 1200
 
 * 1983: Copyright date on GE2 board
 
 * October 12, 1983 "PM2.1 Boot Proms V1.0" released.
 
+* January 20, 1984: IRIS V Kernel version 1a released (SOFT-001)
+
 * April 1984: IRIS 1400 released (1500 when ? )
 
 * May 5, 1984: "SGI Unix System V" "beta-1.5" released
+
+* August 13, 1984: Release W1.7 released by this time
+    * SGI technical note GEN-017: Required a new tape drive firmware revision to prevent unspecified disaster
 
 * October 1984: "IRIS Terminal Guide, Version 1.3"
 
@@ -34,24 +39,35 @@
     * "4431" (DC4 / UC4 / INTER3 / PM1) diagnostic PROM (Mon Nov  5 20:04:03 PST 1984)
     * "4432" (DC4 / UC4 / INTER3 / PM1) diagnostic PROM (Tue Nov  6 08:53:14 PST 1984)
 
-* 1984: "IRIS Workstation Guide, Version 1.0" (1400 / 1500 released around this time)
+* 1984: "IRIS Workstation Guide, Version 1.0" 
 
 * January 1985: PROM 3.x released
 
-* Early 1985: Release W1.7 released
-
-* Later in 1985: GL1-W2.1 released
+* By February 7, 1985: GL1-W2.1 and GL2-W2.1 released (it was not released yet and still referred to as "WS2.0" on December 5, 1984)
     * Virtual memory
     * Stack probes removed
     * Remote graphics library
+
+* By February 7, 1985: IRIS 2000, 2200 and 2400 released
+
+* March 6, 1985: SGI Field Engineering Technical Aid GEN-027 about mass failures of GA chips on GF2 boards (then new)
+    * Apparently "Deviation Authorization #002" was issued to fix this
+
+* 1985: 2.1a / 3.1a releasd
 
 * June 4, 1985: SGI Diagnostic Archive Diagnostic PROMs:
     "4432" (DC4 / UC4 / INTER3 / PM2) built Tue Jun  4 18:52:27 PDT 1985
     also "4432.clean" (DC4 / UC4 / INTER3 / PM2)
 * August 1, 1985: 8MHz Geometry Engines released; 6MHz discontinued
 
-* 1985: 2.1a / 3.1a releasd
+* Before August 6, 1985: GL1-W2.3 & GL2-W2.3 released (presumably T2.3 too)
+    2.4 in beta ? 
 
+* September 16, 1985: IP1 (revision of PM2) boards announced by SGI (Technical Aid GEN-032-R2)
+    * PM2M1 issued to replace PM2M board
+ 
+* October 10, 1985: 3.0 was at least being worked on (possibly unrelaetd to later 3.x's which were the same as 2.x, but for IRIS 3000)
+    
 * Autumn 1985: IRIS 2x00 Turbo (68020) released 
 
 * February 1986: IRIS 3010 / 3020 / 3030 released
