@@ -17,5 +17,8 @@ namespace Iris
         /// @brief get the name of this component. immutable const char*.
         const char* GetName() { return "CPU Generic Base Class (error)"; };
 
+        /// @brief Called on a bus error.
+        virtual void BusError(uint32_t addr) { };
+
     };
 }

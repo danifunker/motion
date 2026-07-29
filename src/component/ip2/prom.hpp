@@ -42,17 +42,17 @@ namespace Iris
 
         void OnWrite8(size_t addr, uint8_t value) override
         { 
-            Logger::Log(LOG_PREFIX_PROM, std::format("Tried to write 8-bit {:x} to PROM mapped {:x}", addr, value).c_str(), LogChannels::Warning);
+            Logger::Log(LOG_PREFIX_PROM, std::format("Tried to write 8-bit {:x} to PROM mapped {:x}", value, addr).c_str(), LogChannels::Warning);
         };
 
         void OnWrite16(size_t addr, uint16_t value) override
         { 
-            Logger::Log(LOG_PREFIX_PROM, std::format("Tried to write 16-bit {:x} to PROM mapped {:x}", addr, value).c_str(), LogChannels::Warning);
+            Logger::Log(LOG_PREFIX_PROM, std::format("Tried to write 16-bit {:x} to PROM mapped {:x}", value, addr).c_str(), LogChannels::Warning);
         };
 
         void OnWrite32(size_t addr, uint32_t value) override
         { 
-            Logger::Log(LOG_PREFIX_PROM, std::format("Tried to write 32-bit {:x} to PROM mapped {:x}", addr, value).c_str(), LogChannels::Warning);
+            Logger::Log(LOG_PREFIX_PROM, std::format("Tried to write 32-bit {:x} to PROM mapped {:x}", value, addr).c_str(), LogChannels::Warning);
         };
 
     private: 

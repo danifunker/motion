@@ -48,5 +48,8 @@ namespace Iris
 
         /// @brief get the name of this component. immutable const char*.
         virtual const char* GetName() { return "Name this component by overriding Component::GetName!"; };
+
+        /// @brief an early start component, is dependent on 
+        bool earlyStart = false;
     };
 }

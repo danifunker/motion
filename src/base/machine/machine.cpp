@@ -5,8 +5,22 @@ namespace Iris
 {
     void Machine::Start()
     {
+        Logger::Log("Initialising early-start components...");
+        // early start components. eg the MMU. The MMU has to be available because 
+        // any memory mappings that get made need to be registered with it 
         for (Component* component : components)
-            component->Start();
+        {
+            if (component->earlyStart)
+                component->Start();
+        }
+
+        Logger::Log("Initialising normal-start components...");
+        // late start components
+        for (Component* component : components)
+        {
+            if (!component->earlyStart)
+                component->Start();
+        }
     }
 
     void Machine::Tick()

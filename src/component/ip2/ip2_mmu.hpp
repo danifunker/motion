@@ -12,6 +12,7 @@
 #include <base/filesystem/filesystem.hpp>
 #include <component/addrspace.hpp>
 #include <coherent/coherent.hpp>
+#include <component/mmu/mmu.hpp>
 
 namespace Iris
 {
@@ -24,21 +25,44 @@ namespace Iris
     // Registers
     //
 
-    #define MMU_START               0x36000000
-    #define MMU_END                 0x3F000000
+    #define MMU_START                       0x36000000
+    #define MMU_END                         0x3F000000
 
-    #define PAGETABLE_MAX_PAGES     (1 << 14) // pagenumber is 13 bits but there might be 2 ptes (one supervisor and one user?)
-    #define PAGETABLE_INDEX(x)      0x3B000000 + (x*sizeof(uint32_t))
+    #define PAGETABLE_MAX_PAGES             (1 << 14) // pagenumber is 13 bits but there might be 2 ptes (one supervisor and one user?)
+    #define PAGETABLE_INDEX(x)              0x3B000000 + (x*sizeof(uint32_t))
 
-    #define REG_OS_BASE             0x36000000
-    #define REG_STATUS              0x38000000
-    #define REG_PARITY              0x39000000
-    #define REG_MULTIBUS_PROTECT    0x3A000000
-    #define REG_PAGETABLE_BASE      0x3B000000
-    #define REG_TEXTDATA_BASE       0x3C000000
-    #define REG_TEXTDATA_LIMIT      0x3D000000
-    #define REG_STACK_BASE          0x3E000000
-    #define REG_STACK_LIMIT         0x3F000000
+    #define REG_OS_BASE                     0x36000000
+    #define REG_STATUS                      0x38000000
+    #define REG_PARITY                      0x39000000
+    #define REG_MULTIBUS_PROTECT            0x3A000000
+    #define REG_PAGETABLE_BASE              0x3B000000
+    #define REG_TEXTDATA_BASE               0x3C000000
+    #define REG_TEXTDATA_LIMIT              0x3D000000
+    #define REG_STACK_BASE                  0x3E000000
+    #define REG_STACK_LIMIT                 0x3F000000
+
+    // IP2 MMU segments
+    #define MMU_SEGMENT_TEXTDATA            0x00000000      // System RAM, Text/Data
+    #define MMU_SEGMENT_STACK               0x10000000      // System RAM, Stack
+    #define MMU_SEGMENT_KERNEL              0x20000000      // System RAM, Kernel
+    #define MMU_SEGMENT_SYSTEM              0x30000000      // Misc shit on IP2 Board & PROM
+    #define MMU_SEGMENT_MULTIBUS_MEMORY     0x40000000      // multibus memory
+    #define MMU_SEGMENT_MULTIBUS_IO         0x50000000      // multibus io
+    #define MMU_SEGMENT_GEOMETRY_ENGINE     0x60000000      // GE
+    #define MMU_SEGMENT_FPA                 0xF0000000      // FPA
+
+    // page masks
+
+    #define MMU_MASK_IS_PROTECTED           0x30000000      // page is protected
+    #define MMU_MASK_NO_ACCESS              0x00000000      // no access
+    #define MMU_MASK_READ_ONLY              0x10000000      // read only
+    #define MMU_MASK_SUPERVISOR_ONLY        0x20000000      // supervisor only
+    #define MMU_MASK_READ_WRITE             0x30000000      // read write
+    #define MMU_MASK_REFERENCED             0x40000000      // referenced
+    #define MMU_MASK_MODIFIED               0x80000000      // modified
+    #define MMU_MASK_ALL_BITS               0xF0001FFF      // ALl theoretically settable bits
+
+    #define MMU_SEGMENT_GET_ID(x)           (x >> 28) & 0x0F
 
     /// The coherent extnension
     class CoherentExtensionIP2MMU : public CoherentExtension
@@ -52,7 +76,7 @@ namespace Iris
     // not sure hwy sgi decided that addresses must be so sparse that bit fucking 24 needed to be the register selector.
     // FOR COMPONENTS, WE DON'T NEED TO BOUNDS CHECK BECAUSE WE ALREADY MAPPED IT!
 
-    class IP2MMU : public Component
+    class IP2MMU : public ComponentMMU
     {
     public: 
         void Start()

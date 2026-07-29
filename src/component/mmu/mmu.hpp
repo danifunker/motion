@@ -14,15 +14,14 @@
 
 namespace Iris
 {
-    // a specific "segment" of memory, which basically has a certain set of codes
-    // everything is done with lambdas
-    class MemorySegment
-    {
-
-    }; 
-
     class ComponentMMU : public Component
     {
+        virtual void BusError(uint32_t addr) { };
 
+        bool IsMMU() override { return true; };
+        
+        // these methods indicate success by their return value and take a translated address
+        virtual bool TranslateRead(uint32_t initialAddress, uint32_t* finalAddress) { };
+        virtual bool TranslateWrite(uint32_t initialAddress, uint32_t* finalAddress) { };
     };
 };
