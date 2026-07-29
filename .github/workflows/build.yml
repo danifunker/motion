@@ -1,0 +1,130 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: 'Create a datestamped release from this build'
+        type: boolean
+        default: false
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  native:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x86_64
+            runner: ubuntu-24.04
+          - name: linux-arm64
+            runner: ubuntu-24.04-arm
+          - name: macos-universal
+            runner: macos-latest
+            cmake_extra: '-DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"'
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - name: Install build dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ninja-build \
+            libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev \
+            libxfixes-dev libxss-dev libxtst-dev libxkbcommon-dev \
+            libwayland-dev wayland-protocols libdecor-0-dev \
+            libasound2-dev libpulse-dev libpipewire-0.3-dev libsndio-dev \
+            libudev-dev libdbus-1-dev libibus-1.0-dev \
+            libdrm-dev libgbm-dev libegl1-mesa-dev libgl1-mesa-dev
+
+      - name: Install build dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: brew list ninja >/dev/null 2>&1 || brew install ninja
+
+      - name: Configure
+        run: >
+          cmake -S . -B build -G Ninja
+          -DCMAKE_BUILD_TYPE=Release
+          ${{ matrix.cmake_extra }}
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Stage install tree
+        run: cmake --install build --prefix "dist/motion-${{ matrix.name }}"
+
+      - name: Show what we produced
+        run: |
+          ls -lR dist
+          file "dist/motion-${{ matrix.name }}/motion"
+
+      - name: Package
+        run: tar -czf "motion-${{ matrix.name }}.tar.gz" -C dist "motion-${{ matrix.name }}"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: motion-${{ matrix.name }}
+          path: motion-${{ matrix.name }}.tar.gz
+          if-no-files-found: error
+
+  release:
+    name: release
+    needs: native
+    runs-on: ubuntu-24.04
+
+    if: ${{ inputs.release }}
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Compute datestamp
+        id: version
+        run: echo "version=v$(date -u +'%Y.%m.%d-%H%M')" >> "$GITHUB_OUTPUT"
+
+      - name: Name archives
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          mkdir -p release
+          for f in artifacts/*.tar.gz; do
+            platform="$(basename "$f" .tar.gz)"
+            platform="${platform#motion-}"
+            cp "$f" "release/motion-${VERSION}-${platform}.tar.gz"
+          done
+          cd release && sha256sum *.tar.gz | tee SHA256SUMS
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "$VERSION" \
+            --title "motion $VERSION" \
+            --notes "$(printf '%s\n' \
+              '### macOS' \
+              '' \
+              'These builds are unsigned, so macOS may refuse to run them with "Apple could not verify motion is free of malware". Clear the quarantine flag:' \
+              '' \
+              '```sh' \
+              'xattr -d com.apple.quarantine motion' \
+              '```')" \
+            --generate-notes \
+            release/*

@@ -4,13 +4,14 @@
 cmake_minimum_required(VERSION 3.20)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output/${CMAKE_BUILD_TYPE})
+# $<CONFIG> rather than ${CMAKE_BUILD_TYPE}: specify with -DCMAKE_BUILD_TYPE
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output/$<CONFIG>)
 
 # mingw-w64 doesn't support static linking against the UCRT
 
 # Install path
 set(ROM_SRC_DIR "${CMAKE_SOURCE_DIR}/roms")
-set(ROM_DST_DIR "${CMAKE_BINARY_DIR}/output/${CMAKE_BUILD_TYPE}/roms")
+set(ROM_DST_DIR "${CMAKE_BINARY_DIR}/output/$<CONFIG>/roms")
 
 project(motion)
 
@@ -32,9 +33,14 @@ if(WIN32 AND MINGW)
         -static -static-libgcc -static-libstdc++ 
         -Wl,-Bstatic -lwinpthread -Wl,-Bdynamic
     )
-else()
+elseif(APPLE)
+    # Apple Clang hard-errors because libc++ is part of MacOS ABI
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # if you statically link everything basically pipewrie will KILL SDL lol
     target_link_options(motion PRIVATE -static-libstdc++ -static-libgcc)             # static stdc++
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    # Clang on Linux/BSD: -static-libstdc++ is fine, -static-libgcc is not reliable
+    target_link_options(motion PRIVATE -static-libstdc++)
 endif()
 
 target_link_libraries(motion PRIVATE 
@@ -49,3 +55,16 @@ add_custom_target(InstallAssets
 )
 
 add_dependencies(motion InstallAssets)
+
+# Flat so PROM is loaded from a path relative to the cwd
+install(TARGETS motion RUNTIME DESTINATION .)
+
+# On by default for releases, turn it off with -DMOTION_INSTALL_ROMS=OFF.
+option(MOTION_INSTALL_ROMS "Bundle roms/ into the install tree" ON)
+
+if(MOTION_INSTALL_ROMS)
+    install(DIRECTORY "${ROM_SRC_DIR}/" DESTINATION roms
+        PATTERN ".DS_Store" EXCLUDE
+        PATTERN "Thumbs.db" EXCLUDE
+    )
+endif()
