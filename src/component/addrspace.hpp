@@ -18,6 +18,10 @@
 // Everything at or above this is devices rather than RAM, so a hole in it is a bus timeout.
 #define ADDRSPACE_DEVICE_SPACE_START 0x30000000
 
+// The PROM sizes memory by writing patterns into RAM that is not fitted, and the kernel probes for
+// boards that are not there. Neither is news after the first few, so do not let them bury the log.
+#define ADDRSPACE_MAX_UNMAPPED_LOGGED 32
+
 namespace Motion
 {
     // This class implements an address space mapping.
@@ -30,6 +34,14 @@ namespace Motion
         size_t endAddr; 
 
         Component* component;
+    };
+
+    /// @brief Suppresses fault reporting for reads the emulated machine is not really making.
+    class AddrSpacePeek
+    {
+    public:
+        AddrSpacePeek();
+        ~AddrSpacePeek();
     };
 
     // Class implementing address space.
@@ -68,6 +80,31 @@ namespace Motion
             /// translate during reset - the reset vector fetch happens before every device has mapped itself.
             static void SetFaultsEnabled(bool enabled) { faultsEnabled = enabled; };
 
+            /*
+                Bring-up instrumentation. An unmapped access is nearly always a pointer that was
+                corrupted somewhere upstream, and the only way to find upstream is to see who was
+                executing at the time. The CPU installs a hook here because AddrSpace cannot include
+                the CPU headers without a cycle.
+            */
+            inline static void (*unmappedHook)(size_t addr, bool isWrite, int32_t width) = nullptr;
+            /// @brief Report an access that landed in a hole, rate limited.
+            static void LogUnmapped(const char* what, size_t addr, bool isWrite, uint32_t value);
+
+            static void NotifyUnmapped(size_t addr, bool isWrite, int32_t width)
+            {
+                if (unmappedHook)
+                    unmappedHook(addr, isWrite, width);
+            }
+
+            /*
+                A read made on behalf of the debugger is not a bus cycle. Disassembling whatever the
+                PC happens to point at, or drawing the stack window, must not record a fault - the
+                CPU would then raise a bus error for an access the emulated machine never made, and
+                because those reads happen outside the execute loop there is nothing to catch it.
+            */
+            static void PushPeek() { peekDepth++; };
+            static void PopPeek() { if (peekDepth) peekDepth--; };
+
             static void SignalFault(size_t addr, bool isWrite);
             static void SignalFaultIfDeviceSpace(size_t addr, bool isWrite);
             static void ClearFault() { faultPending = false; };
@@ -90,6 +127,8 @@ namespace Motion
             inline static bool faultPending = false;
             inline static size_t faultAddress = 0;
             inline static bool faultWasWrite = false;
+            inline static int32_t unmappedLogged = 0;
+            inline static int32_t peekDepth = 0;
 
     };
 }

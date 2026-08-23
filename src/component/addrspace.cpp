@@ -21,6 +21,24 @@ namespace Motion
         return nullptr; 
     }
 
+    void AddrSpace::LogUnmapped(const char* what, size_t addr, bool isWrite, uint32_t value)
+    {
+        if (peekDepth || unmappedLogged >= ADDRSPACE_MAX_UNMAPPED_LOGGED)
+            return;
+
+        unmappedLogged++;
+
+        std::string tail = (unmappedLogged == ADDRSPACE_MAX_UNMAPPED_LOGGED)
+            ? " - further unmapped accesses will not be logged" : "";
+
+        if (isWrite)
+            Logger::Log(LOG_PREFIX_MAPPING, std::format("AddrSpace::{} - Unmapped write of 0x{:x} to 0x{:x}!{}",
+                what, value, addr, tail).c_str(), LogChannels::Warning);
+        else
+            Logger::Log(LOG_PREFIX_MAPPING, std::format("AddrSpace::{} - Unmapped read from 0x{:x}!{}",
+                what, addr, tail).c_str(), LogChannels::Warning);
+    }
+
     uint8_t AddrSpace::ReadU8(size_t addr)
     {
         size_t physAddr = addr;
@@ -43,8 +61,9 @@ namespace Motion
         else
         {
             SignalFaultIfDeviceSpace(physAddr, false);
+            NotifyUnmapped(physAddr, false, 8);
 
-            Logger::Log(LOG_PREFIX_MAPPING, std::format("AddrSpace::ReadU8 - Unmapped read from 0x{:x}!", physAddr).c_str(), LogChannels::Warning);
+            LogUnmapped("ReadU8", physAddr, false, 0);
             return 0;
         }
     }
@@ -74,8 +93,9 @@ namespace Motion
         else
         {
             SignalFaultIfDeviceSpace(physAddr, false);
+            NotifyUnmapped(physAddr, false, 16);
 
-            Logger::Log(LOG_PREFIX_MAPPING, std::format("AddrSpace::ReadU16 - Unmapped read from 0x{:x}!", physAddr).c_str(), LogChannels::Warning);
+            LogUnmapped("ReadU16", physAddr, false, 0);
             return 0;
         }
     }
@@ -105,8 +125,9 @@ namespace Motion
         else
         {
             SignalFaultIfDeviceSpace(physAddr, false);
+            NotifyUnmapped(physAddr, false, 32);
 
-            Logger::Log(LOG_PREFIX_MAPPING, std::format("AddrSpace::ReadU32 - Unmapped read from 0x{:x}!", physAddr).c_str(), LogChannels::Warning);
+            LogUnmapped("ReadU32", physAddr, false, 0);
             return 0;
         }
     }
@@ -180,8 +201,9 @@ namespace Motion
         else
         {
             SignalFaultIfDeviceSpace(physAddr, true);
+            NotifyUnmapped(physAddr, true, 8);
 
-            Logger::Log(LOG_PREFIX_MAPPING, std::format("AddrSpace::WriteU8 - Unmapped write of 0x{:x} to 0x{:x}!", value, physAddr).c_str(), LogChannels::Warning);
+            LogUnmapped("WriteU8", physAddr, true, value);
         }
     }
 
@@ -208,8 +230,9 @@ namespace Motion
         else
         {
             SignalFaultIfDeviceSpace(physAddr, true);
+            NotifyUnmapped(physAddr, true, 16);
 
-            Logger::Log(LOG_PREFIX_MAPPING, std::format("AddrSpace::WriteU16 - Unmapped write of 0x{:x} to 0x{:x}!", value, physAddr).c_str(), LogChannels::Warning);
+            LogUnmapped("WriteU16", physAddr, true, value);
         }
     }
 
@@ -235,8 +258,9 @@ namespace Motion
         else
         {
             SignalFaultIfDeviceSpace(physAddr, true);
+            NotifyUnmapped(physAddr, true, 32);
 
-            Logger::Log(LOG_PREFIX_MAPPING, std::format("AddrSpace::WriteU32 - Unmapped write of 0x{:x} to 0x{:x}!", value, addr).c_str(), LogChannels::Warning);
+            LogUnmapped("WriteU32", physAddr, true, value);
         }
     }
 
@@ -269,9 +293,12 @@ namespace Motion
         SignalFault(addr, isWrite);
     }
 
+    AddrSpacePeek::AddrSpacePeek() { AddrSpace::PushPeek(); }
+    AddrSpacePeek::~AddrSpacePeek() { AddrSpace::PopPeek(); }
+
     void AddrSpace::SignalFault(size_t addr, bool isWrite)
     {
-        if (!faultsEnabled)
+        if (!faultsEnabled || peekDepth)
             return;
 
         faultPending = true;

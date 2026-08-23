@@ -20,6 +20,32 @@ namespace Motion
         if (txLog.size() > SERIAL_TXLOG_MAX_SIZE)
             txLog.erase(0, SERIAL_TXLOG_PURGE_SIZE);
 
+        /*
+            Also put it in the log a line at a time. The tx log only exists to be drawn in Coherent,
+            which is no help at all when the machine is being run headless or from a script, and this
+            line is where every message the PROM and the kernel print comes out.
+        */
+        if (data == '\n' || data == '\r')
+        {
+            if (!pendingLine.empty())
+            {
+                Logger::Log(SERIAL_LOG_PREFIX, std::format("[line {}] {}", id, pendingLine).c_str());
+                pendingLine.clear();
+            }
+        }
+        else
+        {
+            // printable only - the console carries the odd control byte and terminal escape
+            if (data >= 0x20 && data < 0x7F)
+                pendingLine += (char)data;
+
+            if (pendingLine.size() >= SERIAL_LOG_LINE_MAX)
+            {
+                Logger::Log(SERIAL_LOG_PREFIX, std::format("[line {}] {}", id, pendingLine).c_str());
+                pendingLine.clear();
+            }
+        }
+
         FireTransmitEvent(data);
     }
 

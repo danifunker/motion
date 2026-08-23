@@ -5,10 +5,18 @@
 #include <component/component.hpp>
 #include <component/cpu/cpu.hpp>
 #include <component/cpu/moira/Moira.h>
+#include <component/ip2/ip2_interrupt.hpp>
 #include <base/emulation.hpp>
 
 namespace Motion
 {
+    #define LOG_PREFIX_68020_BRIDGE         "68020 CPU"
+
+    // The vectors that are just the machine working normally.
+    #define MC68020_VECTOR_SYSCALL          32
+    #define MC68020_VECTOR_INTERRUPT_FIRST  0x40
+    #define MC68020_VECTOR_INTERRUPT_LAST   0x57
+
     class MC68020MoiraBridge : public Motion::Lisburn::Moira 
     {
         friend class MC68020;
@@ -68,6 +76,59 @@ namespace Motion
             RaiseBusErrorIfFaulted(true);
         }; 
 
-        void didExecuteException(Motion::Lisburn::M68kException exc, uint16_t vector) override { Coherent::Exception(vector); } ;
+        void didExecuteException(Motion::Lisburn::M68kException exc, uint16_t vector) override
+        {
+            /*
+                Interrupts and the syscall trap are the normal traffic and would drown everything
+                else, so only report the exceptions that mean something went wrong. Gated behind
+                logCpuTrace along with the rest of the bring-up instrumentation.
+            */
+            if (traceExceptions && vector != MC68020_VECTOR_SYSCALL
+                && (vector < MC68020_VECTOR_INTERRUPT_FIRST || vector > MC68020_VECTOR_INTERRUPT_LAST))
+            {
+                Logger::Log(LOG_PREFIX_68020_BRIDGE, std::format("exception vector {} taken at pc 0x{:x}, sr 0x{:04x} ({})",
+                    vector, getPC(), getSR(), (getSR() & 0x2000) ? "supervisor" : "user").c_str(), LogChannels::Warning);
+            }
+
+            Coherent::Exception(vector);
+        };
+
+        // Set from the logCpuTrace cvar by MC68020::Start.
+        inline static bool traceExceptions = false;
+
+    public:
+        /*
+            The IP2 does not autovector. An interrupt acknowledge cycle reads a vector number out of
+            U118, a PROM addressed by the interrupt level and the state of the local interrupt lines,
+            which is what puts the scheduler clock on vector 0x51 rather than autovector 30.
+        */
+        void UseVectoredInterrupts() { irqMode = Motion::Lisburn::IrqMode::USER; };
+
+        /*
+            Moira's default routes disassembly reads through read16, which for us is a real bus cycle
+            that can raise a bus error. The debugger disassembles around wherever the PC happens to
+            be, every frame, from outside the execute loop - so that throw had nothing to catch it and
+            took the whole process down.
+        */
+        uint16_t read16Dasm(uint32_t addr) const override
+        {
+            AddrSpacePeek peek;
+            return AddrSpace::ReadU16(addr);
+        }
+
+        uint16_t readIrqUserVector(uint8_t level) const override
+        {
+            if (!interrupts)
+                interrupts = Emulation::GetMachine()->FindComponentByType<IP2Interrupt>();
+
+            // With no interrupt logic to ask, fall back to what the CPU would do on its own.
+            if (!interrupts)
+                return (uint16_t)(24 + level);
+
+            return interrupts->GetVector(level);
+        }
+
+    private:
+        mutable IP2Interrupt* interrupts = nullptr;
     };
 }

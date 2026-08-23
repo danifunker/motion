@@ -39,7 +39,7 @@ namespace Motion
             AddrSpaceMapping mapping = AddrSpaceMapping();
 
             mapping.startAddr = SRAM_START;
-            mapping.endAddr = mapping.startAddr + SRAM_SIZE;
+            mapping.endAddr = mapping.startAddr + SRAM_SIZE - 1;   // GetMapping's end is inclusive
             mapping.component = this;
             AddrSpace::AddMapping(mapping);
 

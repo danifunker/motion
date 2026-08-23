@@ -135,7 +135,7 @@ namespace Motion
             return false;
         }
 
-        size_t cibAddr = ccb.cibPtr & DSD5217_BLOCK_PTR_MASK;
+        size_t cibAddr = CIBAddress();
 
         cib.opStatus = MBRead8(cibAddr + 0x01);
         cib.commandSemaphore = MBRead8(cibAddr + 0x02);
@@ -178,7 +178,7 @@ namespace Motion
 
         if (ccb.cibPtr)
         {
-            size_t cibAddr = ccb.cibPtr & DSD5217_BLOCK_PTR_MASK;
+            size_t cibAddr = CIBAddress();
 
             // "it examines the status semaphore byte in the CIB. If it is zero, the controller assumes
             // that previous status information has been accepted by the host."
@@ -527,7 +527,7 @@ namespace Motion
     void DSD5217::AssertIRQLine()
     {
         irqAsserted = true;
-        multibus->FireMultibusIRQ(DSD5217_MULTIBUS_IRQ_LEVEL);
+        multibus->SetMultibusIRQ(DSD5217_MULTIBUS_IRQ_LEVEL, true);
     }
 
     void DSD5217::ClearIRQLine()
@@ -538,7 +538,7 @@ namespace Motion
             return;
 
         irqAsserted = false;
-        multibus->FireMultibusIRQ(0);
+        multibus->SetMultibusIRQ(DSD5217_MULTIBUS_IRQ_LEVEL, false);
     }
 
     void DSD5217::Shutdown()

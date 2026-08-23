@@ -13,6 +13,7 @@
 #include <component/cpu/mc68020.hpp>
 #include <component/ip2/prom.hpp>
 #include <component/ip2/prom_sram.hpp>
+#include <component/ip2/ip2_interrupt.hpp>
 #include <component/ip2/ip2_mmu.hpp>
 #include <component/ip2/ip2_rtc.hpp>
 #include <component/ip2/ip2_duart.hpp>
@@ -40,6 +41,7 @@ namespace Motion
         AddComponent<MC68020>();
         AddComponent<Multibus>();
         AddComponent<BP3>();
+        AddComponent<IP2Interrupt>();
         AddComponent<IP2MMU>();
         AddComponent<DUART68681>();
         AddComponent<IP2Switches>();

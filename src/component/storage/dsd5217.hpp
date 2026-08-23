@@ -34,8 +34,17 @@
 namespace Motion
 {
     // The controller answers on a single jumper-selected programmed I/O address. Only writes are decoded.
+    /*
+        "Only I/O write operations are recognized" - and only at one address. The board decodes a
+        single byte wide programmed I/O port, which the console reports as "dsd0 at mbio 0x7f00".
+
+        This used to claim the whole 0x7F00-0x7FFF page. Nothing else answers in there, so every read
+        of it came back as 0xFF from this board, and the kernel probing for an EXOS Ethernet at
+        0x7ffc read that, decided a board was present, attached it and then sat in _exconfig waiting
+        forever for a controller that is not fitted.
+    */
     #define DSD5217_MBIO_START                  0x50007F00
-    #define DSD5217_MBIO_END                    0x50007FFF
+    #define DSD5217_MBIO_END                    0x50007F01
     #define DSD5217_MBIO_COMMAND                0x7F01 // all addresses are 1mb region
 
     // Programmed I/O commands. Only the two least significant bits of the written byte are decoded.
@@ -61,7 +70,21 @@ namespace Motion
         only way its operation status byte, status semaphore and IOPB pointer land where the manual says
         they should. Data buffer addresses are NOT rounded.
     */
-    #define DSD5217_BLOCK_PTR_MASK              0xFFFFF0
+    // Block pointers are 24 bit Multibus addresses and are used as they stand.
+    #define DSD5217_BLOCK_PTR_MASK              0xFFFFFF
+
+    /*
+        The CIB pointer is the one exception: it names the CIB's byte 4 rather than its base. SGI's
+        driver builds the block, hands the controller `lea 4(cib)`, and then writes operation status,
+        the semaphores and the IOPB pointer at the manual's offsets from the *base*.
+
+        This used to be handled by rounding every block pointer down to a 16 byte boundary, which is
+        the same thing only while the block happens to be paragraph aligned. The PROM's blocks are;
+        the kernel's are not - its CCB sits at multibus 0x1cde and its CIB at 0x1cee - so rounding
+        read every field fourteen bytes low, the CIB pointer came back as zero and dsdinit sat in its
+        ten million iteration timeout and printed "dsd0: ccb timeout during init".
+    */
+    #define DSD5217_CIB_PTR_BIAS                4
 
     // this is configurable on the real thing with jumpers but for now just do this
     #define DSD5217_MULTIBUS_IRQ_LEVEL          1
@@ -213,6 +236,9 @@ namespace Motion
             uint8_t statusSemaphore;        // +3: status semaphore
             uint32_t iopbPtr;               // +8: IOPB Pointer
         };
+
+        /// @brief Base of the CIB - see DSD5217_CIB_PTR_BIAS.
+        size_t CIBAddress() { return (ccb.cibPtr & DSD5217_BLOCK_PTR_MASK) - DSD5217_CIB_PTR_BIAS; }
 
         /// @brief I/O Parameter Block (5215 User Guide, figure 4-3)
         struct IOPB

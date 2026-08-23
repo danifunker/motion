@@ -41,7 +41,7 @@ namespace Motion
         case REG_MULTIBUS_PROTECT:
             ret = multibusProtect;
             break;
-        case REG_PAGETABLE_BASE ... PAGETABLE_INDEX(PAGETABLE_MAX_PAGES):
+        case REG_PAGETABLE_BASE ... PAGETABLE_INDEX(PAGETABLE_MAX_PAGES) - 1:
             if (addr & 2)
                 ret = pagetable[(addr - REG_PAGETABLE_BASE) >> 2] & 0x0000FFFF;
             else
@@ -102,6 +102,15 @@ namespace Motion
                 break;
             case REG_STATUS:
                 status = value;
+
+                // ST_ENABINT is the master interrupt enable. The register lives here but the logic it
+                // gates does not, so hand it over.
+                if (!interrupts)
+                    interrupts = Emulation::GetMachine()->FindComponentByType<IP2Interrupt>();
+
+                if (interrupts)
+                    interrupts->SetEnabled(value & MMU_STATUS_ENABLE_INTERRUPTS);
+
                 break;
             case REG_PARITY:
                 parity = value;
@@ -109,7 +118,7 @@ namespace Motion
             case REG_MULTIBUS_PROTECT:
                 multibusProtect = value;
                 break;       
-            case REG_PAGETABLE_BASE ... PAGETABLE_INDEX(PAGETABLE_MAX_PAGES):
+            case REG_PAGETABLE_BASE ... PAGETABLE_INDEX(PAGETABLE_MAX_PAGES) - 1:
                 index = (addr - REG_PAGETABLE_BASE) >> 2;
         
                 if (addr & 2)
@@ -185,15 +194,16 @@ namespace Motion
             baseValue = osBase;
             limitValue = 0;             // 0 means no limit
         }
-        // map Multibus Memory
-        // TODO: slave
-        else if (segment == MMU_SEGMENT_GET_ID(MMU_SEGMENT_MULTIBUS_MEMORY))
-        {
-            baseValue = limitValue = 0; // maybe it should be 40000000 ? seems to work not sure what this does here
-        }
         else
         {
-            // these don't seem to use virtual memory, so just ignore them
+            /*
+                Only the three RAM segments go through the page map. MAME's mem_map sends segment 3
+                straight to sys_map and segments 4 and 5 straight out to the Multibus, and the IP2
+                schematic agrees - the map RAM sits between the CPU and DRAM, not between the CPU and
+                the backplane. Running segment 4 through the map with a base of zero silently
+                redirected the PROM's Multibus accesses into whatever page table entry happened to
+                match, which is how the Multibus map programming was going missing.
+            */
             *finalAddress = addr;
             return true; 
         }

@@ -14,6 +14,7 @@
 #include <coherent/coherent.hpp>
 #include <component/mmu/mmu.hpp>
 #include <component/cpu/cpu.hpp>
+#include <component/ip2/ip2_interrupt.hpp>
 
 namespace Motion
 {
@@ -38,7 +39,7 @@ namespace Motion
 
     // Frame number in a page table entry. This is 13 bits, NOT 14 - see MMU_MASK_ALWAYS_SET.
     #define PAGETABLE_FRAME_MASK            0x1FFF
-    #define PAGETABLE_INDEX(x)              0x3B000000 + (x*sizeof(uint32_t))
+    #define PAGETABLE_INDEX(x)              (0x3B000000 + ((x) * sizeof(uint32_t)))
 
     #define REG_OS_BASE                     0x36000000
     #define REG_STATUS                      0x38000000
@@ -59,6 +60,10 @@ namespace Motion
     #define MMU_SEGMENT_MULTIBUS_IO         0x50000000      // multibus io
     #define MMU_SEGMENT_GEOMETRY_ENGINE     0x60000000      // GE
     #define MMU_SEGMENT_FPA                 0xF0000000      // FPA
+
+    // Status register bits. Only the ones something actually uses are named.
+    #define MMU_STATUS_ENABLE_EXTERNAL      0x0010      // enable the external interrupt input
+    #define MMU_STATUS_ENABLE_INTERRUPTS    0x0020      // master interrupt enable
 
     // page masks
 
@@ -157,6 +162,7 @@ namespace Motion
     private: 
         CoherentExtensionIP2MMU* mmuExtension; 
         ComponentCPU* cpu = nullptr;
+        IP2Interrupt* interrupts = nullptr;
         LogChannel mmuChannel;
 
     };

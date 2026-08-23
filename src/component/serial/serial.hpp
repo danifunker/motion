@@ -26,6 +26,9 @@ namespace Motion
     #define SERIAL_TXLOG_MAX_SIZE   16384
     #define SERIAL_TXLOG_PURGE_SIZE 4096
 
+    // Console output is echoed to the log a line at a time; this caps a line with no newline in it.
+    #define SERIAL_LOG_LINE_MAX     200
+
     /// @brief a serial receive event
     class SerialReceiveEvent : public Event
     {
@@ -89,6 +92,9 @@ namespace Motion
 
         // At this point i just gave up and used std::string
         std::string txLog;
+
+        // Whatever has been sent since the last newline, waiting to be echoed to the log.
+        std::string pendingLine;
 
         // Receive queue - fed directly via AddRxByte()/AddRxString().
         std::queue<uint8_t> rxQueue;
