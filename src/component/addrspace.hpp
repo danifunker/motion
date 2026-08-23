@@ -122,13 +122,27 @@ namespace Motion
             ///pointer to an MMU component
             inline static ComponentMMU* mmu;
 
-            /// @brief Set when a translation fails, consumed by TakeFault.
+            /// @brief Whether a failed translation should be recorded at all. Set once at startup.
             inline static bool faultsEnabled = false;
-            inline static bool faultPending = false;
-            inline static size_t faultAddress = 0;
-            inline static bool faultWasWrite = false;
+
+            /*
+                Thread local, and it matters. These are a handshake between one memory access and the
+                code right after it that turns a failed translation into an exception, so they belong
+                to whoever is making the access - and the emulation thread is not the only one making
+                them. The debugger disassembles around the PC from the render thread every frame,
+                inside an AddrSpacePeek, and with a shared peekDepth that window suppressed faults on
+                the *emulation* thread: SignalFault returned early, the CPU read 0xFF instead of
+                taking a bus error, and carried on into whatever that decoded as. It showed up as a
+                boot that died with an illegal instruction roughly one run in four, because it
+                depended on a debugger frame happening to overlap a page fault.
+            */
+            inline static thread_local bool faultPending = false;
+            inline static thread_local size_t faultAddress = 0;
+            inline static thread_local bool faultWasWrite = false;
+            inline static thread_local int32_t peekDepth = 0;
+
+            /// @brief Rate limit for the unmapped access warning. Approximate across threads, which is fine.
             inline static int32_t unmappedLogged = 0;
-            inline static int32_t peekDepth = 0;
 
     };
 }

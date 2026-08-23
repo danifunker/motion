@@ -8,6 +8,7 @@ namespace Motion
     // defined below Start, which installs them
     static MC68020* tracedCpu;
     static void TraceUnmapped(size_t addr, bool isWrite, int32_t width);
+    static void TraceFatalUserFault(size_t addr, bool isWrite);
 
     void MC68020::Start()
     {
@@ -78,6 +79,7 @@ namespace Motion
         {
             tracedCpu = this;
             AddrSpace::unmappedHook = TraceUnmapped;
+            MC68020MoiraBridge::fatalUserFaultHook = TraceFatalUserFault;
         }
     }
 
@@ -92,27 +94,19 @@ namespace Motion
     static int32_t traceDumps = 0;
     static bool traceKernelSeen = false;
 
-    static void TraceUnmapped(size_t addr, bool isWrite, int32_t width)
+    /*
+        Registers, the top of the stack and the control flow that led here. Shared by every fault
+        dump: the interesting question at a fault is never "what address", it is "who was running
+        and what did they think they were pointing at".
+
+        rawPcs asks for that many retired PCs verbatim as well. The collapsed edge list below is the
+        right shape for "how did we get into this routine", but when the suspect is a single
+        instruction - a push that moved the stack pointer twice, say - the only thing that settles
+        it is the untouched instruction sequence leading in.
+    */
+    static void TraceFaultState(int32_t rawPcs)
     {
-        if (!tracedCpu || traceDumps >= PC_TRACE_MAX_DUMPS)
-            return;
-
-        uint32_t pc = tracedCpu->moiraCpu.getPC();
-
-        // The PROM's memory sizing loop walks unfitted RAM on purpose and the FPA is not emulated at
-        // all, so neither is a symptom of anything. Everything else is worth a look.
-        if (addr >= MMU_SEGMENT_FPA)
-            return;
-
-        if (pc >= MMU_SEGMENT_SYSTEM && pc < MMU_SEGMENT_MULTIBUS_MEMORY && addr < ADDRSPACE_DEVICE_SPACE_START)
-            return;
-
-        traceDumps++;
-
         auto& cpu = tracedCpu->moiraCpu;
-
-        Logger::Log(LOG_PREFIX_68020, std::format("--- unmapped {}{} of 0x{:x} at pc 0x{:x} (sr 0x{:04x}, vbr 0x{:x}) ---",
-            isWrite ? "write" : "read", width, addr, pc, cpu.getSR(), cpu.reg.vbr).c_str(), LogChannels::Warning);
 
         for (int32_t i = 0; i < 8; i++)
         {
@@ -120,13 +114,18 @@ namespace Motion
                 i, cpu.reg.d[i], i, cpu.reg.a[i]).c_str(), LogChannels::Warning);
         }
 
-        // The stack is where a smashed pointer usually comes from, so show what is sitting on it.
-        // Read it through the component rather than AddrSpace so the dump cannot itself fault.
-        uint32_t sp = cpu.reg.a[7];
+        // The stack is where a smashed pointer usually comes from, so show what is sitting on it,
+        // both sides: the arguments a callee was handed live above sp, the frame it just built below.
+        // Behind a peek, because this is not an access the machine is making and it must not raise a
+        // fault of its own on top of the one being reported.
+        {
+            AddrSpacePeek peek;
+            uint32_t sp = cpu.reg.a[7];
 
-        for (int32_t i = 0; i < 8; i++)
-            Logger::Log(LOG_PREFIX_68020, std::format("  [sp+0x{:02x}] 0x{:08x}", i * 4,
-                AddrSpace::ReadU32(sp + (i * 4))).c_str(), LogChannels::Warning);
+            for (int32_t i = -2; i < 10; i++)
+                Logger::Log(LOG_PREFIX_68020, std::format("  [sp{}0x{:02x}] 0x{:08x}", i < 0 ? "-" : "+",
+                    (i < 0 ? -i : i) * 4, AddrSpace::ReadU32(sp + (i * 4))).c_str(), LogChannels::Warning);
+        }
 
         /*
             Printing every PC is useless - a copy loop fills the whole window. What matters is the
@@ -183,6 +182,62 @@ namespace Motion
 
         if (!line.empty())
             Logger::Log(LOG_PREFIX_68020, std::format("  flow: {}", line).c_str(), LogChannels::Warning);
+
+        if (rawPcs > 0)
+        {
+            std::string pcs;
+            int32_t want = (int32_t)((total < (uint64_t)rawPcs) ? total : (uint64_t)rawPcs);
+
+            for (int32_t i = want; i > 0; i--)
+                pcs += std::format("{:x} ", tracePcs[(traceCount - i) % PC_TRACE_SIZE]);
+
+            Logger::Log(LOG_PREFIX_68020, std::format("  last {} pcs: {}", want, pcs).c_str(), LogChannels::Warning);
+        }
+    }
+
+    static void TraceUnmapped(size_t addr, bool isWrite, int32_t width)
+    {
+        if (!tracedCpu || traceDumps >= PC_TRACE_MAX_DUMPS)
+            return;
+
+        uint32_t pc = tracedCpu->moiraCpu.getPC();
+
+        // The PROM's memory sizing loop walks unfitted RAM on purpose and the FPA is not emulated at
+        // all, so neither is a symptom of anything. Everything else is worth a look.
+        if (addr >= MMU_SEGMENT_FPA)
+            return;
+
+        if (pc >= MMU_SEGMENT_SYSTEM && pc < MMU_SEGMENT_MULTIBUS_MEMORY && addr < ADDRSPACE_DEVICE_SPACE_START)
+            return;
+
+        traceDumps++;
+
+        Logger::Log(LOG_PREFIX_68020, std::format("--- unmapped {}{} of 0x{:x} at pc 0x{:x} (sr 0x{:04x}, vbr 0x{:x}) ---",
+            isWrite ? "write" : "read", width, addr, pc, tracedCpu->moiraCpu.getSR(),
+            tracedCpu->moiraCpu.reg.vbr).c_str(), LogChannels::Warning);
+
+        TraceFaultState(0);
+    }
+
+    /*
+        A user mode access to the null guard page is the fault that is about to become SIGSEGV -
+        every other user fault is demand paging doing its job. It is the only one worth the full
+        dump, and there are only a handful of them per boot, so they are not rate limited with the
+        unmapped dumps.
+    */
+    static void TraceFatalUserFault(size_t addr, bool isWrite)
+    {
+        if (!tracedCpu || traceDumps >= PC_TRACE_MAX_DUMPS)
+            return;
+
+        traceDumps++;
+
+        auto& cpu = tracedCpu->moiraCpu;
+
+        Logger::Log(LOG_PREFIX_68020, std::format("--- fatal user fault: {} of 0x{:x} at pc 0x{:x} (sr 0x{:04x}) ---",
+            isWrite ? "write" : "read", addr, cpu.getPC0(), cpu.getSR()).c_str(), LogChannels::Warning);
+
+        TraceFaultState(PC_TRACE_FATAL_RAW_PCS);
     }
 
     /*

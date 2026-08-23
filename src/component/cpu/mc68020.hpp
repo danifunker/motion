@@ -18,6 +18,7 @@ namespace Motion
     #define PC_TRACE_SIZE           (1 << 18)
     #define PC_TRACE_MAX_DUMPS      4
     #define PC_TRACE_SAMPLE_EVERY   5000000
+    #define PC_TRACE_FATAL_RAW_PCS  48
 
     // A fault storm would otherwise fill the log.
     #define MC68020_MAX_ESCAPED_EXCEPTIONS  16

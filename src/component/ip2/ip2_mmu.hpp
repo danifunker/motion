@@ -12,6 +12,7 @@
 #include <base/filesystem/filesystem.hpp>
 #include <component/addrspace.hpp>
 #include <coherent/coherent.hpp>
+#include <coherent/coherent_editor.hpp>
 #include <component/mmu/mmu.hpp>
 #include <component/cpu/cpu.hpp>
 #include <component/ip2/ip2_interrupt.hpp>
@@ -117,6 +118,20 @@ namespace Motion
             mmuExtension = new CoherentExtensionIP2MMU(this);
             Coherent::RegisterExtension(mmuExtension);
 
+            /*
+                The page table is not in system RAM - it is 64KB of SRAM on the board - so a RAM dump
+                does not contain it. When a process takes an unexpected fault this is the first thing
+                worth looking at, so give it an editor of its own. Entries are host order here, not
+                the big endian the guest sees.
+            */
+            CoherentEditor::Settings pagetableSettings;
+            pagetableSettings.buf = (uint8_t*)pagetable;
+            pagetableSettings.bufSize = sizeof(pagetable);
+            pagetableSettings.name = "IP2 Page Table";
+
+            pagetableEditor = new CoherentEditor(this, pagetableSettings);
+            Coherent::RegisterExtension(pagetableEditor);
+
             mmuChannel = LogChannel(MMU_LOG_CHANNEL_NAME, ConsoleColor::BrightCyan, ConsoleColor::White);
             Logger::AddChannel(mmuChannel);
             logEnabled = logIP2MMU->GetValue();
@@ -127,6 +142,7 @@ namespace Motion
 
         void Shutdown() override
         {
+            delete pagetableEditor;
             delete mmuExtension;
             ComponentMMU::Shutdown();
         }
@@ -161,6 +177,7 @@ namespace Motion
 
     private: 
         CoherentExtensionIP2MMU* mmuExtension; 
+        CoherentEditor* pagetableEditor = nullptr;
         ComponentCPU* cpu = nullptr;
         IP2Interrupt* interrupts = nullptr;
         LogChannel mmuChannel;
