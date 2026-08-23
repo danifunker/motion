@@ -17,6 +17,7 @@
 #include <component/ip2/ip2_rtc.hpp>
 #include <component/ip2/ip2_duart.hpp>
 #include <component/ip2/ip2_dip_switches.hpp>
+#include <component/ip2/ip2_mouse.hpp>
 #include <component/keyboard/keyboard_iris.hpp>
 #include <component/multibus/multibus.hpp>
 #include <component/gpu/juniper/dc4/dc4.hpp>
@@ -32,15 +33,18 @@ namespace Motion
     void IRIS3130::AddComponents()
     {
         AddComponent<Memory>();
+        // PROM and PROM SRAM come before the CPU on purpose: both are early start, and the reset vector
+        // and reset stack pointer live in them, so they have to be mapped before the CPU is reset.
+        AddComponent<PROM>();
+        AddComponent<PROM_SRAM>();
         AddComponent<MC68020>();
         AddComponent<Multibus>();
         AddComponent<BP3>();
-        AddComponent<PROM>();
-        AddComponent<PROM_SRAM>();
         AddComponent<IP2MMU>();
         AddComponent<DUART68681>();
         AddComponent<IP2Switches>();
         AddComponent<IP2Clock>();
+        AddComponent<IP2Mouse>();
         AddComponent<DC4>();
         AddComponent<UC4>();
         AddComponent<DSD5217>();

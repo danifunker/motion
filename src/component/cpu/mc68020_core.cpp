@@ -7,6 +7,7 @@ namespace Motion
     {
         // ensure we are in reset so e.g. the MMUs don't try and map everything
         isInReset = true;
+        AddrSpace::SetFaultsEnabled(false);
 
         Logger::Log(LOG_PREFIX_68020, "*yawn* I'm a Motorola 68020!", LogChannels::Debug);
 
@@ -54,6 +55,7 @@ namespace Motion
 
         // moira has a didReset delegate, but due to various design reasons (mostly include cycles) we can't use it 
         isInReset = false;
+        AddrSpace::SetFaultsEnabled(true);
     }
 
     void MC68020::Tick()

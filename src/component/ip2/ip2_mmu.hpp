@@ -28,7 +28,16 @@ namespace Motion
     #define MMU_START                       0x36000000
     #define MMU_END                         0x3F000000
 
-    #define PAGETABLE_MAX_PAGES             (1 << 14) // pagenumber is 13 bits but there might be 2 ptes (one supervisor and one user?)
+    // 17x AM2167-35PC (16384x1) gives 16384 entries of 17 bits, which is exactly the width of
+    // MMU_MASK_ALWAYS_SET below: 13 bits of frame number plus protection, referenced and modified.
+    #define PAGETABLE_MAX_PAGES             (1 << 14)
+
+    // The page number is the 14 bits above the 4KB page offset. Relying on a uint16_t to truncate it
+    // keeps 16 bits, which is two bits too many.
+    #define PAGETABLE_PAGE_MASK             0x3FFF
+
+    // Frame number in a page table entry. This is 13 bits, NOT 14 - see MMU_MASK_ALWAYS_SET.
+    #define PAGETABLE_FRAME_MASK            0x1FFF
     #define PAGETABLE_INDEX(x)              0x3B000000 + (x*sizeof(uint32_t))
 
     #define REG_OS_BASE                     0x36000000
@@ -63,6 +72,9 @@ namespace Motion
     #define MMU_MASK_ALWAYS_SET             0xF0001FFF      // Bits which mame always sets. these seem to be wrong compared with the implementation 
 
     #define MMU_SEGMENT_GET_ID(x)           ((x >> 28) & 0x0F)
+
+    // A fault storm would bury every other message in the log, so only report the first few.
+    #define IP2MMU_MAX_FAULTS_LOGGED        32
 
     /// The coherent extnension
     class CoherentExtensionIP2MMU : public CoherentExtension
@@ -134,6 +146,7 @@ namespace Motion
         uint16_t parity = 0x0;
         uint16_t multibusProtect = 0x0;
         uint32_t pagetable[PAGETABLE_MAX_PAGES] = {0};
+        int32_t faultsLogged = 0;
         uint16_t textdataBase = 0x0;
         uint16_t textdataLimit = 0x0;
         uint16_t stackBase = 0x0;

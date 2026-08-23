@@ -196,6 +196,11 @@ namespace Motion
                 }
                 else
                 {
+                    // Nothing on the backplane answers, so the cycle times out and BERR is asserted.
+                    // The PROM relies on this: gl2_probe decides whether a GF2 is fitted by reading the
+                    // FBC flags at 0x50002400 and seeing whether it bus errors.
+                    AddrSpace::SignalFault(addr, false);
+
                     Logger::Log(MULTIBUS_LOG_PREFIX,
                     std::format("Multibus::Read8: SetCachedReadMapping FAILED: Unmapped Multibus read from 0x{:x}", addr).c_str(),
                     LogChannels::Warning);
@@ -222,6 +227,11 @@ namespace Motion
                 }
                 else
                 {
+                    // Nothing on the backplane answers, so the cycle times out and BERR is asserted.
+                    // The PROM relies on this: gl2_probe decides whether a GF2 is fitted by reading the
+                    // FBC flags at 0x50002400 and seeing whether it bus errors.
+                    AddrSpace::SignalFault(addr, false);
+
                     Logger::Log(MULTIBUS_LOG_PREFIX,
                     std::format("Multibus::Read16: SetCachedReadMapping FAILED: Unmapped Multibus read from 0x{:x}", addr).c_str(),
                     LogChannels::Warning);
@@ -248,6 +258,11 @@ namespace Motion
                 }
                 else
                 {
+                    // Nothing on the backplane answers, so the cycle times out and BERR is asserted.
+                    // The PROM relies on this: gl2_probe decides whether a GF2 is fitted by reading the
+                    // FBC flags at 0x50002400 and seeing whether it bus errors.
+                    AddrSpace::SignalFault(addr, false);
+
                     Logger::Log(MULTIBUS_LOG_PREFIX,
                     std::format("Multibus::Read32: SetCachedReadMapping FAILED: Unmapped Multibus read from 0x{:x}", addr).c_str(),
                     LogChannels::Warning);
@@ -274,6 +289,8 @@ namespace Motion
                 }
                 else
                 {
+                    AddrSpace::SignalFault(addr, true);
+
                     Logger::Log(MULTIBUS_LOG_PREFIX,
                     std::format("Multibus::Write8: SetCachedWriteMapping FAILED: Unmapped Multibus write of 0x{:x} to 0x{:x}", value, addr).c_str(),
                     LogChannels::Warning);
@@ -300,6 +317,8 @@ namespace Motion
                 }
                 else
                 {
+                    AddrSpace::SignalFault(addr, true);
+
                     Logger::Log(MULTIBUS_LOG_PREFIX,
                     std::format("Multibus::Write16: SetCachedWriteMapping FAILED: Unmapped Multibus write of 0x{:x} to 0x{:x}", value, addr).c_str(),
                     LogChannels::Warning);
@@ -326,6 +345,8 @@ namespace Motion
                 }
                 else
                 {
+                    AddrSpace::SignalFault(addr, true);
+
                     Logger::Log(MULTIBUS_LOG_PREFIX,
                     std::format("Multibus::Write32: SetCachedWriteMapping FAILED: Unmapped Multibus write of 0x{:x} to 0x{:x}", value, addr).c_str(),
                     LogChannels::Warning);

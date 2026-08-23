@@ -30,6 +30,9 @@ namespace Motion
     class PROM_SRAM : public Component
     {
     public: 
+        // The reset stack pointer points at the top of this, so it must be mapped before the CPU starts.
+        bool IsEarlyStart() override { return true; };
+
         void Start() override
         {
             // map the private ram
