@@ -31,7 +31,9 @@ namespace Motion
 
     void Coherent::Init()
     {
-        startPaused = Cvar::Set("startPaused", "1");
+        // Get, not Set: Set clobbers whatever the user asked for on the command line, which made
+        // the documented "+set startPaused 0" silently do nothing.
+        startPaused = Cvar::Get("startPaused", "1");
 
         Logger::Log(COHERENT_LOG_PREFIX, COHERENT_VERSION " initialised");
         Logger::settings.SetPostLogFunction(Coherent_CTrampolineForLog);
